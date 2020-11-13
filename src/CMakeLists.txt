@@ -2,9 +2,13 @@ add_subdirectory(3rd_party)
 
 include_directories(.)
 include_directories(3rd_party)
-include_directories(3rd_party/SQLiteCpp/include)
+if(NOT COMPILE_WASM)
+  include_directories(3rd_party/SQLiteCpp/include)
+endif()
 include_directories(3rd_party/sentencepiece)
-include_directories(3rd_party/fbgemm/include)
+if(NOT COMPILE_WASM)
+  include_directories(3rd_party/fbgemm/include)
+endif()
 include_directories(3rd_party/intgemm)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/3rd_party/intgemm)
 include_directories(${CMAKE_BINARY_DIR}/local/include)
@@ -113,11 +117,35 @@ set(MARIAN_SOURCES
   $<TARGET_OBJECTS:faiss>
 )
 
-add_library(marian STATIC ${MARIAN_SOURCES})
+set(MARIANDECODER_SOURCES
+  graph/expression_graph.cpp
+  graph/expression_operators.cpp
+  graph/node.cpp
+  graph/node_operators.cpp
+  graph/node_initializers.cpp
 
-target_compile_options(marian PRIVATE ${ALL_WARNINGS})
+  layers/convolution.cpp
+  layers/generic.cpp
+  layers/loss.cpp
+  layers/weight.cpp
+  layers/lsh.cpp
+
+  translator/beam_search.cpp
+  translator/scorers.cpp
+)
+
+if(NOT COMPILE_WASM)
+  add_library(marian STATIC ${MARIAN_SOURCES})
+endif(NOT COMPILE_WASM)
+add_library(mariandecoder STATIC ${MARIANDECODER_SOURCES})
+
+if(NOT COMPILE_WASM)
+  target_compile_options(marian PUBLIC ${ALL_WARNINGS})
+endif(NOT COMPILE_WASM)
+target_compile_options(mariandecoder PUBLIC ${ALL_WARNINGS})
 
 # Generate git_revision.h to reflect current git revision information
+if(GIT_REVISION STREQUAL "")
 # [https://stackoverflow.com/questions/1435953/how-can-i-pass-git-sha1-to-compiler-as-definition-using-cmake]
 # Git updates .git/logs/HEAD file whenever you pull or commit something.
 
@@ -144,20 +172,41 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/common/git_revision.h
   DEPENDS ${MARIAN_GIT_DIR}/logs/HEAD
   VERBATIM
 )
+else(GIT_REVISION STREQUAL "")
+add_custom_command(OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/common/git_revision.h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMAND echo "#define GIT_REVISION \"${GIT_REVISION}\"" > ${CMAKE_CURRENT_SOURCE_DIR}/common/git_revision.h
+  VERBATIM
+)
+endif(GIT_REVISION STREQUAL "")
+
 add_custom_target(marian_version DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/common/git_revision.h)
-add_dependencies(marian marian_version) # marian must depend on it so that it gets created first
+if(NOT COMPILE_WASM)
+  add_dependencies(marian marian_version) # marian must depend on it so that it gets created first
+endif(NOT COMPILE_WASM)
+add_dependencies(mariandecoder marian_version) # mariandecoder must depend on it so that it gets created first
 # make sure all local dependencies are installed first before this is built
-add_dependencies(marian 3rd_party_installs)
+if(NOT COMPILE_WASM)
+  add_dependencies(marian 3rd_party_installs)
+endif(NOT COMPILE_WASM)
+add_dependencies(mariandecoder 3rd_party_installs)
 
 if(APPLE) # This is a dependency of pathie but I can't seem to link it into that CMakeLists because we're not compiling it as a library.
    set(EXT_LIBS ${EXT_LIBS} iconv)
 endif()
 
 # Add external libs to the public interface of the library
-target_link_libraries(marian ${EXT_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+if(NOT COMPILE_WASM)
+  target_link_libraries(marian ${EXT_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+endif(NOT COMPILE_WASM)
+target_link_libraries(mariandecoder ${EXT_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
-set_target_properties(marian PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
-set_target_properties(marian PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+if(NOT COMPILE_WASM)
+  set_target_properties(marian PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+  set_target_properties(marian PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+endif(NOT COMPILE_WASM)
+set_target_properties(mariandecoder PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set_target_properties(mariandecoder PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 
 if(CUDA_FOUND)
   cuda_add_library(marian_cuda

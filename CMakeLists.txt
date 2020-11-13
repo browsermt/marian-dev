@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.1)
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 if (POLICY CMP0074)
   cmake_policy(SET CMP0074 NEW) # CMake 3.12
@@ -9,6 +9,8 @@ project(marian CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
+set(GIT_REVISION "" CACHE STRING "Specify the Git revision manually (to build without a .git directory)")
+set(PROJECT_VERSION_GIT_SHA "" CACHE STRING "Specify the Git sha1 manually (to build without a .git directory)")
 
 # Custom CMake options
 option(COMPILE_CPU "Compile CPU version" ON)
@@ -64,6 +66,7 @@ include(GetVersionFromFile)
 message(STATUS "Project name: ${PROJECT_NAME}")
 message(STATUS "Project version: ${PROJECT_VERSION_STRING_FULL}")
 
+message(STATUS "Updating git submodules")
 execute_process(COMMAND git submodule update --init --recursive --no-fetch
                 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -158,6 +161,10 @@ else(MSVC)
     endif(AVX512_FOUND)
   else()
     set(INTRINSICS "-msse4.1")
+  endif()
+
+  if(COMPILE_WASM)
+    set(INTRINSICS "${INTRINSICS} -msimd128")
   endif()
 
   if(USE_FBGEMM)
