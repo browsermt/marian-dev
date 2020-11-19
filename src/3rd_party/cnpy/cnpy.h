@@ -18,7 +18,7 @@
 #include<map>
 #include <memory>
 
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__unix__)
 #include <unistd.h>
 #endif
 
