@@ -1,9 +1,11 @@
 #if MKL_FOUND
 #include <mkl.h>
-#else
-#if BLAS_FOUND
-#include <cblas.h>
-#endif
+#elif BLAS_FOUND
+  #if WASM_COMPATIBLE_BLAS
+    #include "3rd_party/onnxjs/src/wasm-ops/gemm.h"
+  #else
+    #include <cblas.h>
+  #endif // WASM_COMPATIBLE_BLAS
 #endif
 
 inline void sgemm(bool transA,
@@ -20,20 +22,24 @@ inline void sgemm(bool transA,
                   float* c,
                   int ldc) {
 #if BLAS_FOUND
-  cblas_sgemm(CblasRowMajor,
-              transA ? CblasTrans : CblasNoTrans,
-              transB ? CblasTrans : CblasNoTrans,
-              rows_a,
-              rows_b,
-              width,
-              alpha,
-              a,
-              lda,
-              b,
-              ldb,
-              beta,
-              c,
-              ldc);
+    #if WASM_COMPATIBLE_BLAS
+        gemm_f32_imp(transA, transB, rows_a, rows_b, width, alpha, a, b, beta, c);
+    #else
+        cblas_sgemm(CblasRowMajor,
+                    transA ? CblasTrans : CblasNoTrans,
+                    transB ? CblasTrans : CblasNoTrans,
+                    rows_a,
+                    rows_b,
+                    width,
+                    alpha,
+                    a,
+                    lda,
+                    b,
+                    ldb,
+                    beta,
+                    c,
+                    ldc);
+    #endif
 #else
     transA; transB; rows_a; rows_b; width; alpha; a; lda; b; ldb; beta; c; ldc; // make compiler happy
     ABORT("Marian must be compiled with a BLAS library");

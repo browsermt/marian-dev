@@ -9,10 +9,12 @@
 
 #if MKL_FOUND
 #include <mkl.h>
-#else
-#if BLAS_FOUND
-#include <cblas.h>
-#endif
+#elif BLAS_FOUND
+  #if WASM_COMPATIBLE_BLAS
+    #include "3rd_party/onnxjs/src/wasm-ops/gemm.h"
+  #else
+    #include <cblas.h>
+  #endif // WASM_COMPATIBLE_BLAS
 #endif
 
 #include "integer_common.h"
@@ -195,9 +197,10 @@ void ProdBatched(marian::Tensor C,
                  bool transB,
                  float beta,
                  float scalar) {
-  if (C->getBackend()->isLegacyBatchedGemm()) {
+  //if (C->getBackend()->isLegacyBatchedGemm()) {
     ProdBatchedOld(C, allocator, A, B, transA, transB, beta, scalar);
-  }
+  //}
+  /*
 #if MKL_FOUND
   float alpha = scalar;
 
@@ -274,6 +277,7 @@ void ProdBatched(marian::Tensor C,
   C; A; B; transA; transB; beta; scalar;
   ABORT("You need to compile with MKL in order to use the CPU version");
 #endif
+  */
 }
 
 void ProdWithBias(marian::Tensor C,

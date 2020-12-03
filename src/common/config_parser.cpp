@@ -17,10 +17,12 @@
 
 #if MKL_FOUND
 #include <mkl.h>
-#else
-#if BLAS_FOUND
-#include <cblas.h>
-#endif
+#elif BLAS_FOUND
+  #if WASM_COMPATIBLE_BLAS
+    #include "3rd_party/onnxjs/src/wasm-ops/gemm.h"
+  #else
+    #include <cblas.h>
+  #endif // WASM_COMPATIBLE_BLAS
 #endif
 
 namespace marian {
