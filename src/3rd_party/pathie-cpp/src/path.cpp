@@ -935,6 +935,8 @@ Path Path::exe()
 
   std::string str = utf16_to_utf8(buf);
   return Path(str);
+#elif defined(DECODER_ONLY)
+  throw(std::runtime_error("Path::exe() not supported in decoder-only version of marian"));
 #else
 #error Unsupported platform.
 #endif

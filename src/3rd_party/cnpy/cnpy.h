@@ -5,7 +5,9 @@
 #ifndef LIBCNPY_H_
 #define LIBCNPY_H_
 
+#if !defined(DECODER_ONLY)
 #include "3rd_party/zlib/zlib.h"
+#endif
 
 #include<string>
 #include<stdexcept>
@@ -133,6 +135,9 @@ namespace cnpy {
 
     template<typename T> void npz_save(std::string zipname, std::string fname, const T* data, const unsigned int* shape, const unsigned int ndims, std::string mode = "w")
     {
+#if defined(DECODER_ONLY)
+            throw std::runtime_error("npz_save: Platform not supported");
+#else
         //first, append a .npy to the fname
         fname += ".npy";
 
@@ -221,6 +226,7 @@ namespace cnpy {
         fwrite(&footer[0],sizeof(char),footer.size(),fp);
         //BUGBUG: no check for write error
         fclose(fp);
+#endif
     }
 
     //one item pass to npz_save() below
@@ -265,6 +271,9 @@ namespace cnpy {
     static inline
     void npz_save(std::string zipname, const std::vector<NpzItem>& items)
     {
+#if defined(DECODER_ONLY)
+        throw std::runtime_error("npz_save: Platform not supported");
+#else
         auto tmpname = zipname + "$$"; // TODO: add thread id or something
         unlink(tmpname.c_str()); // when saving to HDFS, we cannot overwrite an existing file
         FILE* fp = fopen(tmpname.c_str(),"wb");
@@ -366,6 +375,7 @@ namespace cnpy {
             unlink(tmpname.c_str());
             throw std::runtime_error("npz_save: error saving to file: " + zipname);
         }
+#endif
     }
 
     static inline
