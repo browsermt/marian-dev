@@ -16,6 +16,7 @@ option(COMPILE_CUDA "Compile GPU version" ON)
 option(COMPILE_EXAMPLES "Compile examples" OFF)
 option(COMPILE_SERVER "Compile marian-server" OFF)
 option(COMPILE_TESTS "Compile tests" OFF)
+option(COMPILE_DECODER_ONLY "Compile marian-decoder only" OFF)
 option(USE_CCACHE "Use ccache compiler cache (https://ccache.dev)" OFF)
 option(USE_CUDNN "Use CUDNN library" OFF)
 option(USE_DOXYGEN "Build documentation with Doxygen" ON)
@@ -26,6 +27,11 @@ option(USE_NCCL "Use NCCL library" ON)
 option(USE_SENTENCEPIECE "Download and compile SentencePiece" ON)
 option(USE_STATIC_LIBS "Link statically against non-system libs" OFF)
 option(GENERATE_MARIAN_INSTALL_TARGETS "Generate Marian install targets (requires CMake 3.12+)" OFF)
+
+if(COMPILE_DECODER_ONLY)
+  # Enable building decoder-only source code.
+  add_compile_definitions(DECODER_ONLY)
+endif(COMPILE_DECODER_ONLY)
 
 # fbgemm and sentencepiece are both defined with "non-local" installation targets (the source projects don't define them,
 # so we define them in src\3rd_party\CMakeLists.txt), but that isn't supported until CMake 3.12. Prior to CMake 3.12,
@@ -230,7 +236,12 @@ endif()
 if(USE_SENTENCEPIECE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SENTENCEPIECE -D_USE_INTERNAL_STRING_VIEW")
   LIST(APPEND CUDA_NVCC_FLAGS -DUSE_SENTENCEPIECE; )
-  set(EXT_LIBS ${EXT_LIBS} sentencepiece sentencepiece_train)
+  if (COMPILE_DECODER_ONLY)
+    # We don't need sentencepiece_train for decoder-only builds
+    set(EXT_LIBS ${EXT_LIBS} sentencepiece)
+  else()
+    set(EXT_LIBS ${EXT_LIBS} sentencepiece sentencepiece_train)
+  endif()
 endif()
 
 if(USE_ONNX)

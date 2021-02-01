@@ -39,7 +39,7 @@ set(MARIAN_SOURCES
   data/factored_vocab.cpp
   data/corpus_base.cpp
   data/corpus.cpp
-  data/corpus_sqlite.cpp
+  ##data/corpus_sqlite.cpp
   data/corpus_nbest.cpp
   data/text_input.cpp
   data/shortlist.cpp
@@ -60,7 +60,7 @@ set(MARIAN_SOURCES
   tensors/cpu/tensor_operators.cpp
   
   tensors/cpu/integer_common.cpp
-  tensors/cpu/fbgemm/packed_gemm.cpp
+  #tensors/cpu/fbgemm/packed_gemm.cpp
 
   graph/expression_graph.cpp
   graph/expression_operators.cpp
@@ -75,7 +75,7 @@ set(MARIAN_SOURCES
   layers/generic.cpp
   layers/loss.cpp
   layers/weight.cpp
-  layers/lsh.cpp
+  #layers/lsh.cpp
 
   rnn/cells.cpp
   rnn/attention.cpp
@@ -99,23 +99,45 @@ set(MARIAN_SOURCES
   translator/helpers.cpp
   translator/scorers.cpp
 
-  training/graph_group_async.cpp
-  training/graph_group_sync.cpp
-  training/graph_group.cpp
-  training/graph_group_singleton.cpp
-  training/validator.cpp
-  training/communicator.cpp
+  #training/graph_group_async.cpp
+  #training/graph_group_sync.cpp
+  #training/graph_group.cpp
+  #training/graph_group_singleton.cpp
+  #training/validator.cpp
+  #training/communicator.cpp
 
   # this is only compiled to catch build errors, but not linked
-  microsoft/quicksand.cpp
-  microsoft/cosmos.cpp
+  #microsoft/quicksand.cpp
+  #microsoft/cosmos.cpp
 
   $<TARGET_OBJECTS:libyaml-cpp>
-  $<TARGET_OBJECTS:SQLiteCpp>
+  #$<TARGET_OBJECTS:SQLiteCpp>
   $<TARGET_OBJECTS:pathie-cpp>
-  $<TARGET_OBJECTS:zlib>
-  $<TARGET_OBJECTS:faiss>
+  #$<TARGET_OBJECTS:zlib>
+  #$<TARGET_OBJECTS:faiss>
 )
+
+if (NOT COMPILE_DECODER_ONLY)
+  list(APPEND MARIAN_SOURCES
+    data/corpus_sqlite.cpp
+    tensors/cpu/fbgemm/packed_gemm.cpp
+    layers/lsh.cpp
+
+    training/graph_group_async.cpp
+    training/graph_group_sync.cpp
+    training/graph_group.cpp
+    training/graph_group_singleton.cpp
+    training/validator.cpp
+    training/communicator.cpp
+
+    microsoft/quicksand.cpp
+    microsoft/cosmos.cpp
+
+    $<TARGET_OBJECTS:SQLiteCpp>
+    $<TARGET_OBJECTS:zlib>
+    $<TARGET_OBJECTS:faiss>
+  )
+endif()
 
 add_library(marian STATIC ${MARIAN_SOURCES})
 
@@ -197,13 +219,16 @@ endif(CUDA_FOUND)
 # as a sub-project of another build system that is only interested in the Marian output library.
 option(COMPILE_LIBRARY_ONLY "Build only the Marian library and exclude all executables." OFF)
 if (NOT COMPILE_LIBRARY_ONLY)
-  add_executable(marian_train command/marian_main.cpp)
-  set_target_properties(marian_train PROPERTIES OUTPUT_NAME marian)
-  target_compile_options(marian_train PRIVATE ${ALL_WARNINGS})
-
   add_executable(marian_decoder command/marian_decoder.cpp)
   set_target_properties(marian_decoder PROPERTIES OUTPUT_NAME marian-decoder)
   target_compile_options(marian_decoder PRIVATE ${ALL_WARNINGS})
+
+  set(EXECUTABLES ${EXECUTABLES} marian_decoder)
+
+  if (NOT COMPILE_DECODER_ONLY)
+  add_executable(marian_train command/marian_main.cpp)
+  set_target_properties(marian_train PROPERTIES OUTPUT_NAME marian)
+  target_compile_options(marian_train PRIVATE ${ALL_WARNINGS})
 
   add_executable(marian_scorer command/marian_scorer.cpp)
   set_target_properties(marian_scorer PROPERTIES OUTPUT_NAME marian-scorer)
@@ -217,7 +242,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
   set_target_properties(marian_conv PROPERTIES OUTPUT_NAME marian-conv)
   target_compile_options(marian_conv PRIVATE ${ALL_WARNINGS})
 
-  set(EXECUTABLES ${EXECUTABLES} marian_train marian_decoder marian_scorer marian_vocab marian_conv)
+  list(APPEND EXECUTABLES marian_train marian_scorer marian_vocab marian_conv)
 
   # marian.zip and marian.tgz
   # This combines marian, marian_decoder in a single ZIP or TAR file for
@@ -261,6 +286,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
     endif(MSVC)
     set(EXECUTABLES ${EXECUTABLES} marian_server)
   endif(COMPILE_SERVER)
+  endif(NOT COMPILE_DECODER_ONLY)
 
   foreach(exec ${EXECUTABLES})
     target_link_libraries(${exec} marian)

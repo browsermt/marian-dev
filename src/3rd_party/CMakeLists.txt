@@ -2,11 +2,13 @@
 include_directories(.)
 
 add_subdirectory(./yaml-cpp)
-add_subdirectory(./SQLiteCpp)
+if(NOT COMPILE_DECODER_ONLY)
+  add_subdirectory(./SQLiteCpp)
+  add_subdirectory(./zlib)
+  add_subdirectory(./faiss)
+  include_directories(./faiss)
+endif()
 add_subdirectory(./pathie-cpp)
-add_subdirectory(./zlib)
-add_subdirectory(./faiss)
-include_directories(./faiss)
 
 set(INTGEMM_DONT_BUILD_TESTS ON CACHE BOOL "Disable intgemm tests")
 add_subdirectory(./intgemm)
@@ -123,13 +125,15 @@ include_directories(./CLI)
 include_directories(./pathie-cpp/include)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  #set_target_properties(SQLiteCpp PROPERTIES COMPILE_FLAGS
-  set_property(TARGET SQLiteCpp APPEND_STRING PROPERTY COMPILE_FLAGS
-    " -Wno-parentheses-equality -Wno-unused-value")
-  if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+  if(NOT COMPILE_DECODER_ONLY)
+    #set_target_properties(SQLiteCpp PROPERTIES COMPILE_FLAGS
     set_property(TARGET SQLiteCpp APPEND_STRING PROPERTY COMPILE_FLAGS
-      " -Wno-implicit-int-float-conversion")
-  endif()
+      " -Wno-parentheses-equality -Wno-unused-value")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
+      set_property(TARGET SQLiteCpp APPEND_STRING PROPERTY COMPILE_FLAGS
+        " -Wno-implicit-int-float-conversion")
+    endif()
+  endif(NOT COMPILE_DECODER_ONLY)
   set_property(TARGET libyaml-cpp APPEND_STRING PROPERTY COMPILE_FLAGS
     " -fPIC -Wno-unused-value")
   set_property(TARGET pathie-cpp APPEND_STRING PROPERTY COMPILE_FLAGS
