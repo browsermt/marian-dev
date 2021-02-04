@@ -17,6 +17,7 @@ option(COMPILE_SERVER "Compile marian-server" OFF)
 option(COMPILE_TESTS "Compile tests" OFF)
 option(COMPILE_WASM "Compile marian as WASM target" OFF)
 option(COMPILE_DECODER_ONLY "Compile marian-decoder only" OFF)
+option(COMPILE_WITH_PTHREADS "Compile with pthreads support" ON)
 option(USE_CCACHE "Use ccache compiler cache (https://ccache.dev)" OFF)
 option(USE_CUDNN "Use CUDNN library" OFF)
 option(USE_DOXYGEN "Build documentation with Doxygen" ON)
@@ -39,6 +40,11 @@ if(COMPILE_DECODER_ONLY)
   # Enable building decoder-only source code.
   add_compile_definitions(DECODER_ONLY)
 endif(COMPILE_DECODER_ONLY)
+
+if(COMPILE_WITH_PTHREADS)
+  # Need to set compile definition as well
+  add_compile_definitions(USE_PTHREADS)
+endif()
 
 # fbgemm and sentencepiece are both defined with "non-local" installation targets (the source projects don't define them,
 # so we define them in src\3rd_party\CMakeLists.txt), but that isn't supported until CMake 3.12. Prior to CMake 3.12,
@@ -242,9 +248,16 @@ else(MSVC)
       add_compile_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
       add_link_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
     else()
-      set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
-      set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 -Wno-error=pthreads-mem-growth -funroll-loops")
-      list(APPEND ALL_WARNINGS -Wno-error=pthreads-mem-growth)
+      if(COMPILE_WITH_PTHREADS)
+        set(PTHREAD_FLAG "-pthread")
+        set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
+      endif()
+      set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
+      set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
+      # Disabling Pthreads + memory growth warning to be an error
+      # Pthreads + memory growth causes JS accessing the wasm memory to be slow
+      # https://github.com/WebAssembly/design/issues/1271
+      list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
       list(APPEND ALL_WARNINGS -Wno-error=deprecated-register)
     endif()
 

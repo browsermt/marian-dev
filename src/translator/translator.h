@@ -7,7 +7,9 @@
 #include "data/shortlist.h"
 #include "data/text_input.h"
 
+#if USE_PTHREADS
 #include "3rd_party/threadpool.h"
+#endif
 
 #include "translator/history.h"
 #include "translator/output_collector.h"
@@ -74,7 +76,9 @@ public:
     auto devices = Config::getDevices(options_);
     numDevices_ = devices.size();
 
+#if USE_PTHREADS
     ThreadPool threadPool(numDevices_, numDevices_);
+#endif
     scorers_.resize(numDevices_);
     graphs_.resize(numDevices_);
 
@@ -114,7 +118,11 @@ public:
         graph->forward();
       };
 
+#if USE_PTHREADS
       threadPool.enqueue(task, device, id++);
+#else
+      task(device, id++);
+#endif
     }
 
     if(options_->get<bool>("output-sampling", false)) {
@@ -130,9 +138,16 @@ public:
   }
 
   void run() override {
+  #if USE_PTHREADS
     data::BatchGenerator<data::Corpus> bg(corpus_, options_);
+  #else
+    // Set to false to run non-async mode
+    data::BatchGenerator<data::Corpus> bg(corpus_, options_, nullptr, false);
+  #endif
 
+#if USE_PTHREADS
     ThreadPool threadPool(numDevices_, numDevices_);
+#endif
 
     size_t batchId = 0;
     auto collector = New<OutputCollector>(options_->get<std::string>("output"));
@@ -178,7 +193,11 @@ public:
         }
       };
 
+#if USE_PTHREADS
       threadPool.enqueue(task, batchId++);
+#else
+      task(batchId++);
+#endif
 
     }
   }
@@ -262,7 +281,12 @@ public:
                       ? convertTsvToLists(input, options_->get<size_t>("tsv-fields", 1))
                       : std::vector<std::string>({input});
     auto corpus_ = New<data::TextInput>(inputs, srcVocabs_, options_);
+  #if USE_PTHREADS
     data::BatchGenerator<data::TextInput> batchGenerator(corpus_, options_);
+  #else
+    // Set to false to check if wasm builds run further
+    data::BatchGenerator<data::TextInput> batchGenerator(corpus_, options_, nullptr, false);
+  #endif
 
     auto collector = New<StringCollector>(options_->get<bool>("quiet-translation", false));
     auto printer = New<OutputPrinter>(options_, trgVocab_);
@@ -271,7 +295,9 @@ public:
     batchGenerator.prepare();
 
     {
+#if USE_PTHREADS
       ThreadPool threadPool_(numDevices_, numDevices_);
+#endif
 
       for(auto batch : batchGenerator) {
         auto task = [=](size_t id) {
@@ -294,7 +320,11 @@ public:
           }
         };
 
+#if USE_PTHREADS
         threadPool_.enqueue(task, batchId);
+#else
+        task(batchId);
+#endif
         batchId++;
       }
     }

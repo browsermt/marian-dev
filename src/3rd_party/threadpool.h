@@ -53,29 +53,46 @@ class ThreadPool {
     ~ThreadPool();
 
     size_t getNumTasks() const {
+    #if USE_PTHREADS
       return tasks.size();
+    #else
+      ABORT("ThreadPool::getNumTasks() not supported");
+    #endif
     }
 
     void wait_for_one(std::unique_lock<std::mutex>& lock) {
+    #if USE_PTHREADS
       waiting_threads++;
       sync_condition.notify_all();
       sync_condition.wait(lock, [this]{ return continue_work; });
       waiting_threads--;
+    #else
+      ABORT("ThreadPool::wait_for_one not supported");
+    #endif
     }
 
     void wait_for_others(std::unique_lock<std::mutex>& lock) {
+    #if USE_PTHREADS
       continue_work = false;
       sync_condition.wait(lock, [this]{
         return waiting_threads == workers.size() - 1;
       });
+    #else
+      ABORT("ThreadPool::wait_for_others not supported");
+    #endif
     }
 
     void notify_others() {
+    #if USE_PTHREADS
       continue_work = true;
       sync_condition.notify_all();
+    #else
+      ABORT("ThreadPool::notify_others not supported");
+    #endif
     }
 
     void join_all() {
+    #if USE_PTHREADS
       {
         std::unique_lock<std::mutex> lock(queue_mutex);
         stop = true;
@@ -85,6 +102,9 @@ class ThreadPool {
       for (std::thread &worker: workers) {
         worker.join();
       }
+    #else
+      ABORT("ThreadPool::join_all not supported");
+    #endif
     }
 
  private:
@@ -107,12 +127,18 @@ class ThreadPool {
 // the constructor just launches some amount of workers
 inline ThreadPool::ThreadPool(size_t threads, size_t in_bound)
   : bound(in_bound), stop(false) {
+  #if USE_PTHREADS
     ABORT_IF(getThrowExceptionOnAbort(), "Throwing of MarianRuntimeException not presently supported in threads");
     reserve(threads);
+  #else
+    bound; stop; continue_work; waiting_threads; // Make compiler warnings silent on wasm
+    ABORT("ThreadPool::ThreadPool not supported");
+  #endif
 }
 
 // allow callers to increase the number of threads after the fact
 inline void ThreadPool::reserve(size_t threads) {
+#if USE_PTHREADS
     while (workers.size() < threads)
       workers.emplace_back(
           [this] {
@@ -133,6 +159,9 @@ inline void ThreadPool::reserve(size_t threads) {
               }
           }
       );
+#else
+    ABORT("ThreadPool::reserve not supported");
+#endif
 }
 
 // add new work item to the pool
@@ -140,6 +169,7 @@ template<class F, class... Args>
 inline auto ThreadPool::enqueue(F&& f, Args&&... args)
     -> std::future<typename std::result_of<F(Args...)>::type>
 {
+#if USE_PTHREADS
   using return_type = typename std::result_of<F(Args...)>::type;
 
   auto inner_task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
@@ -172,12 +202,17 @@ inline auto ThreadPool::enqueue(F&& f, Args&&... args)
   }
   condition.notify_one();
   return res;
+#else
+  ABORT("ThreadPool::enqueue not supported");
+#endif
 }
 
 // the destructor joins all threads
 inline ThreadPool::~ThreadPool() {
+#if USE_PTHREADS
   if(!stop)
     join_all();
+#endif
 }
 
 // helper class to wait for procedural tasks (no return value) submitted into the ThreadPool
@@ -190,11 +225,19 @@ class TaskBarrier {
   std::vector<std::future<void>> futures;
 public:
   void push_back(std::future<void>&& future) {
+  #if USE_PTHREADS
     futures.emplace_back(std::move(future));
+  #else
+    ABORT("TaskBarrier::push_back not supported");
+  #endif
   }
   ~TaskBarrier() { // destructor waits until all results are available
+  #if USE_PTHREADS
     for (auto&& future : futures)
       future.wait();
+  #else
+    LOG(info, "TaskBarrier destructor not supported");
+  #endif
   }
 
 };
