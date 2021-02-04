@@ -145,7 +145,11 @@ void switchtoMultinodeLogging(std::string nodeIdStr) {
 
 namespace marian {
   std::string noinline getCallStack(size_t skipLevels) {
+  #ifdef WASM
+    return "Callstacks not supported in WASM builds currently";
+  #else
     return ::Microsoft::MSR::CNTK::DebugUtil::GetCallStack(skipLevels + 2, /*makeFunctionNamesStandOut=*/true);
+  #endif
   }
 
   void noinline logCallStack(size_t skipLevels) {

@@ -11,6 +11,11 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/3rd_party/intgemm)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/3rd_party)
 include_directories(${CMAKE_BINARY_DIR}/local/include)
 
+if (NOT COMPILE_WASM)
+  set(EXCEPTION_WITH_CALLSTACK_SOURCE 3rd_party/ExceptionWithCallStack.cpp)
+  set(QUANTIZER_SOURCE optimizers/quantizer.cpp)
+endif()
+
 set(MARIAN_SOURCES
   common/aliases.cpp
   common/fastopt.cpp
@@ -45,7 +50,7 @@ set(MARIAN_SOURCES
   data/shortlist.cpp
 
   3rd_party/cnpy/cnpy.cpp
-  3rd_party/ExceptionWithCallStack.cpp
+  ${EXCEPTION_WITH_CALLSTACK_SOURCE}
   
   3rd_party/onnx/protobuf/onnx-ml.pb-wrapper.cpp
 
@@ -80,7 +85,7 @@ set(MARIAN_SOURCES
   rnn/cells.cpp
   rnn/attention.cpp
 
-  optimizers/quantizer.cpp
+  ${QUANTIZER_SOURCE}
   optimizers/clippers.cpp
   optimizers/optimizers.cpp
 
@@ -138,6 +143,10 @@ if (NOT COMPILE_DECODER_ONLY)
     $<TARGET_OBJECTS:faiss>
   )
 endif()
+
+if(COMPILE_WASM)
+  #set_source_files_properties(common/binary.cpp PROPERTIES COMPILE_FLAGS -msse4.1)
+endif(COMPILE_WASM)
 
 add_library(marian STATIC ${MARIAN_SOURCES})
 
@@ -224,6 +233,12 @@ if (NOT COMPILE_LIBRARY_ONLY)
   target_compile_options(marian_decoder PRIVATE ${ALL_WARNINGS})
 
   set(EXECUTABLES ${EXECUTABLES} marian_decoder)
+
+  if(COMPILE_WASM)
+    set_target_properties(marian_decoder PROPERTIES
+                          LINK_FLAGS "${MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS}"
+                          SUFFIX     ".html")
+  endif(COMPILE_WASM)
 
   if (NOT COMPILE_DECODER_ONLY)
   add_executable(marian_train command/marian_main.cpp)

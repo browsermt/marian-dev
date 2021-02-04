@@ -8,7 +8,6 @@ endif ()
 project(marian CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
 
 # Custom CMake options
 option(COMPILE_CPU "Compile CPU version" ON)
@@ -16,6 +15,7 @@ option(COMPILE_CUDA "Compile GPU version" ON)
 option(COMPILE_EXAMPLES "Compile examples" OFF)
 option(COMPILE_SERVER "Compile marian-server" OFF)
 option(COMPILE_TESTS "Compile tests" OFF)
+option(COMPILE_WASM "Compile marian as WASM target" OFF)
 option(COMPILE_DECODER_ONLY "Compile marian-decoder only" OFF)
 option(USE_CCACHE "Use ccache compiler cache (https://ccache.dev)" OFF)
 option(USE_CUDNN "Use CUDNN library" OFF)
@@ -28,6 +28,12 @@ option(USE_NCCL "Use NCCL library" ON)
 option(USE_SENTENCEPIECE "Download and compile SentencePiece" ON)
 option(USE_STATIC_LIBS "Link statically against non-system libs" OFF)
 option(GENERATE_MARIAN_INSTALL_TARGETS "Generate Marian install targets (requires CMake 3.12+)" OFF)
+
+if(NOT COMPILE_WASM)
+  # Setting BUILD_ARCH to native invokes CPU intrinsic detection logic below.
+  # Prevent invoking that logic for WASM builds.
+  set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
+endif()
 
 if(COMPILE_DECODER_ONLY)
   # Enable building decoder-only source code.
@@ -172,6 +178,10 @@ else(MSVC)
       set(INTRINSICS "${INTRINSICS} -mavx512f")
       list(APPEND INTRINSICS_NVCC -Xcompiler\ -mavx512f)
     endif(AVX512_FOUND)
+  elseif(COMPILE_WASM)
+    # Can't set to -msse4.1 because onnxjs doesn't compile with this flag. It can be upgraded to
+    # -msse4.1 once marian can solely be compiled with intgemm ("onnxjs" will be removed in that case)
+    set(INTRINSICS "-mssse3 -msimd128")
   else()
     set(INTRINSICS "-msse4.1")
   endif()
@@ -204,24 +214,64 @@ else(MSVC)
     set(CMAKE_RDYNAMIC_FLAG "-rdynamic")
   endif(CMAKE_COMPILER_IS_GNUCC)
 
-  set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
-  set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -m64 -funroll-loops -g ${CMAKE_RDYNAMIC_FLAG}")
-  set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
-  set(CMAKE_CXX_FLAGS_SLIM            "-O3 -m64 -funroll-loops -DNDEBUG")
-  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE}")
-  set(CMAKE_CXX_FLAGS_PROFILE         "${CMAKE_CXX_FLAGS_RELEASE} -pg")
-  set(CMAKE_CXX_FLAGS_PROFGEN         "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-generate -fprofile-correction")
-  set(CMAKE_CXX_FLAGS_PROFUSE         "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-use -fprofile-correction")
+  if(COMPILE_WASM)
+    # Setting USE_SSE2 definition to enable SSE2 specific code in "3rd_party/sse_mathfun.h" for wasm builds
+    add_compile_definitions(USE_SSE2)
+    # Add compile definition for wasm builds
+    add_compile_definitions(WASM)
+    if(0)
+      set(WASM_EMSCRIPTEN_COMPILE_OPTIONS -O3 "SHELL:-s WASM=1" "SHELL:-s ASSERTIONS=1" "SHELL:-s DISABLE_EXCEPTION_CATCHING=0" "SHELL:-s LLD_REPORT_UNDEFINED")
+      # necessary to be able to use files downloaded in JS (https://emscripten.org/docs/api_reference/Filesystem-API.html#including-file-system-support)
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "SHELL:-s FORCE_FILESYSTEM=1")
+      # necessary to allow the total amount of memory to change depending on the demands of the application
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "SHELL:-s ALLOW_MEMORY_GROWTH=1")
+      # Flag to preserve function names in compiled code when linking (https://emscripten.org/docs/tools_reference/emcc.html#emcc-g)
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS -g2)
 
-  # these need to be set separately
-  set(CMAKE_C_FLAGS                 "-pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
-  set(CMAKE_C_FLAGS_RELEASE         "-O3 -m64 -funroll-loops -g ${CMAKE_RDYNAMIC_FLAG}")
-  set(CMAKE_C_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
-  set(CMAKE_C_FLAGS_SLIM            "-O3 -m64 -funroll-loops -DNDEBUG")
-  set(CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE}")
-  set(CMAKE_C_FLAGS_PROFILE         "${CMAKE_C_FLAGS_RELEASE} -pg")
-  set(CMAKE_C_FLAGS_PROFGEN         "${CMAKE_C_FLAGS_RELEASE} -fprofile-generate -fprofile-correction")
-  set(CMAKE_C_FLAGS_PROFUSE         "${CMAKE_C_FLAGS_RELEASE} -fprofile-use -fprofile-correction")
+      # Imported CMAKE_CXX_FLAGS/CMAKE_C_FLAGS from below for wasm builds; This could be improved.
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:-std=c++11>" -pthread ${CMAKE_GCC_FLAGS} -fPIC ${INTRINSICS})
+      separate_arguments(DISABLE_GLOBALLY UNIX_COMMAND "${DISABLE_GLOBALLY}")
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS ${DISABLE_GLOBALLY})
+      # Disabling Pthreads + memory growth warning to be an error
+      # Pthreads + memory growth causes JS accessing the wasm memory to be slow
+      # https://github.com/WebAssembly/design/issues/1271
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "-Wno-error=pthreads-mem-growth")
+
+      # Release flags from below for wasm builds;
+      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS -funroll-loops)
+      add_compile_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
+      add_link_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
+    else()
+      set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
+      set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 -Wno-error=pthreads-mem-growth -funroll-loops")
+      list(APPEND ALL_WARNINGS -Wno-error=pthreads-mem-growth)
+      list(APPEND ALL_WARNINGS -Wno-error=deprecated-register)
+    endif()
+
+    # use our customizations to the generated emscripted html and js resources
+    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "--pre-js ${CMAKE_SOURCE_DIR}/wasm/pre-module.js \
+                                              --post-js ${CMAKE_SOURCE_DIR}/wasm/post-module.js \
+                                              --shell-file ${CMAKE_SOURCE_DIR}/wasm/custom_shell.html")
+  else(COMPILE_WASM)
+    set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
+    set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -m64 -funroll-loops -g ${CMAKE_RDYNAMIC_FLAG}")
+    set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
+    set(CMAKE_CXX_FLAGS_SLIM            "-O3 -m64 -funroll-loops -DNDEBUG")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO  "${CMAKE_CXX_FLAGS_RELEASE}")
+    set(CMAKE_CXX_FLAGS_PROFILE         "${CMAKE_CXX_FLAGS_RELEASE} -pg")
+    set(CMAKE_CXX_FLAGS_PROFGEN         "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-generate -fprofile-correction")
+    set(CMAKE_CXX_FLAGS_PROFUSE         "${CMAKE_CXX_FLAGS_RELEASE} -fprofile-use -fprofile-correction")
+
+    # these need to be set separately
+    set(CMAKE_C_FLAGS                 "-pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
+    set(CMAKE_C_FLAGS_RELEASE         "-O3 -m64 -funroll-loops -g ${CMAKE_RDYNAMIC_FLAG}")
+    set(CMAKE_C_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
+    set(CMAKE_C_FLAGS_SLIM            "-O3 -m64 -funroll-loops -DNDEBUG")
+    set(CMAKE_C_FLAGS_RELWITHDEBINFO  "${CMAKE_C_FLAGS_RELEASE}")
+    set(CMAKE_C_FLAGS_PROFILE         "${CMAKE_C_FLAGS_RELEASE} -pg")
+    set(CMAKE_C_FLAGS_PROFGEN         "${CMAKE_C_FLAGS_RELEASE} -fprofile-generate -fprofile-correction")
+    set(CMAKE_C_FLAGS_PROFUSE         "${CMAKE_C_FLAGS_RELEASE} -fprofile-use -fprofile-correction")
+  endif(COMPILE_WASM)
 endif(MSVC)
 
 # with gcc 7.0 and above we need to mark fallthrough in switch case statements
