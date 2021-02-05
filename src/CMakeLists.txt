@@ -85,7 +85,7 @@ set(MARIAN_SOURCES
   rnn/cells.cpp
   rnn/attention.cpp
 
-  ${QUANTIZER_SOURCE}
+  #${QUANTIZER_SOURCE}
   optimizers/clippers.cpp
   optimizers/optimizers.cpp
 
