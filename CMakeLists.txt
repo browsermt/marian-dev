@@ -248,17 +248,14 @@ else(MSVC)
       add_compile_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
       add_link_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
     else()
-      if(COMPILE_WITH_PTHREADS)
-        set(PTHREAD_FLAG "-pthread")
-        set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
-      endif()
+      set(PTHREAD_FLAG "-pthread")
+      set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
       set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
       set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
       # Disabling Pthreads + memory growth warning to be an error
       # Pthreads + memory growth causes JS accessing the wasm memory to be slow
       # https://github.com/WebAssembly/design/issues/1271
       list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
-      list(APPEND ALL_WARNINGS -Wno-error=deprecated-register)
     endif()
 
     # use our customizations to the generated emscripted html and js resources
