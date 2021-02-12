@@ -6,7 +6,7 @@
 	url = https://github.com/marian-nmt/marian-regression-tests
 [submodule "src/3rd_party/sentencepiece"]
 	path = src/3rd_party/sentencepiece
-	url = https://github.com/marian-nmt/sentencepiece
+	url = https://github.com/browsermt/sentencepiece
 [submodule "src/3rd_party/nccl"]
 	path = src/3rd_party/nccl
 	url = https://github.com/marian-nmt/nccl
