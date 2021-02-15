@@ -231,7 +231,7 @@ else(MSVC)
     # Add compile definition for wasm builds
     add_compile_definitions(WASM)
     if(0)
-      set(WASM_EMSCRIPTEN_COMPILE_OPTIONS -O3 "SHELL:-s WASM=1" "SHELL:-s ASSERTIONS=1" "SHELL:-s DISABLE_EXCEPTION_CATCHING=0" "SHELL:-s LLD_REPORT_UNDEFINED")
+      set(WASM_EMSCRIPTEN_COMPILE_OPTIONS -O3 "SHELL:-s WASM=1" "SHELL:-s ASSERTIONS=0" "SHELL:-s DISABLE_EXCEPTION_CATCHING=1" "SHELL:-s LLD_REPORT_UNDEFINED")
       # necessary to be able to use files downloaded in JS (https://emscripten.org/docs/api_reference/Filesystem-API.html#including-file-system-support)
       list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "SHELL:-s FORCE_FILESYSTEM=1")
       # necessary to allow the total amount of memory to change depending on the demands of the application
@@ -256,7 +256,7 @@ else(MSVC)
       set(PTHREAD_FLAG "-pthread")
       set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
       set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
-      set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=1 -s DISABLE_EXCEPTION_CATCHING=0 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
+      set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=0 -s DISABLE_EXCEPTION_CATCHING=1 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
       # Disabling Pthreads + memory growth warning to be an error
       # Pthreads + memory growth causes JS accessing the wasm memory to be slow
       # https://github.com/WebAssembly/design/issues/1271
