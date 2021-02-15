@@ -24,13 +24,13 @@ cmake_cmd += -DUSE_FBGEMM=off
 cmake_cmd += -DCOMPILE_LIBRARY_ONLY=off
 cmake_cmd += -DUSE_MKL=off
 cmake_cmd += -DCOMPILE_CPU=on
+cmake_cmd += -DCOMPILE_WITHOUT_EXCEPTIONS=on
+cmake_cmd += -DUSE_WASM_COMPATIBLE_BLAS=on
+
 native_decoder_cmake_cmd = ${cmake_cmd}
 native_decoder_cmake_cmd += -DCOMPILE_DECODER_ONLY=on
 
-wasm_compatible_decoder_only_native_cmake_cmd = ${native_decoder_cmake_cmd}
-wasm_compatible_decoder_only_native_cmake_cmd += -DUSE_WASM_COMPATIBLE_BLAS=on
-
-wasm_cmake_cmd = ${wasm_compatible_decoder_only_native_cmake_cmd}
+wasm_cmake_cmd = ${native_decoder_cmake_cmd}
 wasm_cmake_cmd += -DCOMPILE_WASM=on
 #wasm_cmake_cmd += -DProtobuf_INCLUDE_DIR=/usr/opt/protobuf-wasm-lib/dist/include
 #wasm_cmake_cmd += -DProtobuf_LIBRARY=/usr/opt/protobuf-wasm-lib/dist/lib/libprotobuf.a
