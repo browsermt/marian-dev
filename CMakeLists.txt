@@ -24,6 +24,7 @@ option(USE_DOXYGEN "Build documentation with Doxygen" ON)
 option(USE_FBGEMM "Use FBGEMM" OFF)
 option(USE_MKL "Compile with MKL support" ON)
 option(USE_WASM_COMPATIBLE_BLAS "Compile with a WASM compatible blas for decoder only builds" OFF)
+option(COMPILE_WITHOUT_EXCEPTIONS "Compile without exceptions" OFF)
 option(USE_MPI "Use MPI library" OFF)
 option(USE_NCCL "Use NCCL library" ON)
 option(USE_SENTENCEPIECE "Download and compile SentencePiece" ON)
@@ -44,6 +45,10 @@ endif(COMPILE_DECODER_ONLY)
 if(COMPILE_WITH_PTHREADS)
   # Need to set compile definition as well
   add_compile_definitions(USE_PTHREADS)
+endif()
+
+if(COMPILE_WITHOUT_EXCEPTIONS)
+  add_compile_definitions(WITHOUT_EXCEPTIONS)
 endif()
 
 # fbgemm and sentencepiece are both defined with "non-local" installation targets (the source projects don't define them,
