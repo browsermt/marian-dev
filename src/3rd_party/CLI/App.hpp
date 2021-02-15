@@ -29,12 +29,16 @@
 namespace CLI {
 
 #ifndef CLI11_PARSE
+#if WITHOUT_EXCEPTIONS
+  #define CLI11_PARSE(app, argc, argv)   (app).parse((argc), (argv))
+#else
 #define CLI11_PARSE(app, argc, argv)                                                                                   \
     try {                                                                                                              \
         (app).parse((argc), (argv));                                                                                   \
     } catch(const CLI::ParseError &e) {                                                                                \
         return (app).exit(e);                                                                                          \
     }
+#endif // WITHOUT_EXCEPTIONS
 #endif
 
 namespace detail {
@@ -1296,6 +1300,10 @@ class App {
                 config_required_ = true;
             }
             if(!config_name_.empty()) {
+            #if WITHOUT_EXCEPTIONS
+                std::vector<ConfigItem> values = config_formatter_->from_file(config_name_);
+                _parse_config(values);
+            #else
                 try {
                     std::vector<ConfigItem> values = config_formatter_->from_file(config_name_);
                     _parse_config(values);
@@ -1303,6 +1311,7 @@ class App {
                     if(config_required_)
                         throw;
                 }
+            #endif
             }
         }
 
@@ -1394,16 +1403,24 @@ class App {
     bool _parse_single_config(const ConfigItem &item, size_t level = 0) {
         if(level < item.parents.size()) {
             App *subcom;
+        #if WITHOUT_EXCEPTIONS
+            std::cout << item.parents.at(level) << std::endl;
+            subcom = get_subcommand(item.parents.at(level));
+        #else
             try {
                 std::cout << item.parents.at(level) << std::endl;
                 subcom = get_subcommand(item.parents.at(level));
             } catch(const OptionNotFound &) {
                 return false;
             }
+        #endif
             return subcom->_parse_single_config(item, level + 1);
         }
 
         Option *op;
+    #if WITHOUT_EXCEPTIONS
+        op = get_option("--" + item.name);
+    #else
         try {
             op = get_option("--" + item.name);
         } catch(const OptionNotFound &) {
@@ -1413,6 +1430,7 @@ class App {
                 missing_.emplace_back(detail::Classifer::NONE, item.fullname());
             return false;
         }
+    #endif
 
         if(!op->get_configurable())
             throw ConfigError::NotConfigurable(item.fullname());

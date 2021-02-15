@@ -35,11 +35,15 @@ protected:
   std::string getAlignment(const data::SoftAlignment& align);
 
   float getAlignmentThreshold(const std::string& str) {
+  #if WITHOUT_EXCEPTIONS
+      return str.size() == 0 ? 0.f : std::max(std::stof(str), 0.f);
+  #else
     try {
       return std::max(std::stof(str), 0.f);
     } catch(...) {
       return 0.f;
     }
+  #endif
   }
 };
 

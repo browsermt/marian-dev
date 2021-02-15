@@ -106,6 +106,9 @@ void createLoggers(const marian::Config* config) {
 }
 
 static void unhandledException() {
+#if WITHOUT_EXCEPTIONS
+  std::abort();
+#else
   if(std::current_exception()) {
     try {
       throw;  // rethrow so that we can get access to what()
@@ -117,6 +120,7 @@ static void unhandledException() {
   } else {
     std::abort();
   }
+#endif
 }
 
 static void setErrorHandlers() {

@@ -52,23 +52,33 @@ void Config::initialize(ConfigParser const& cp) {
   bool loaded = false;
   if(mode == cli::mode::translation || mode == cli::mode::server) {
     auto model = get<std::vector<std::string>>("models")[0];
+#if WITHOUT_EXCEPTIONS
+    if(!get<bool>("ignore-model-config"))
+        loaded = loadModelParameters(model);
+#else
     try {
       if(!get<bool>("ignore-model-config"))
         loaded = loadModelParameters(model);
     } catch(std::runtime_error& ) {
       LOG(info, "[config] No model configuration found in model file");
     }
+#endif
   }
   // if cli::mode::training or cli::mode::scoring
   else {
     auto model = get<std::string>("model");
     if(filesystem::exists(model) && !get<bool>("no-reload")) {
+#if WITHOUT_EXCEPTIONS
+    if(!get<bool>("ignore-model-config"))
+        loaded = loadModelParameters(model);
+#else
       try {
         if(!get<bool>("ignore-model-config"))
           loaded = loadModelParameters(model);
       } catch(std::runtime_error&) {
         LOG(info, "[config] No model configuration found in model file");
       }
+#endif
     }
   }
 

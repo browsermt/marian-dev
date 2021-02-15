@@ -114,12 +114,15 @@ std::string CLIWrapper::switchGroup(std::string name) {
 }
 
 void CLIWrapper::parse(int argc, char **argv) {
+#if WITHOUT_EXCEPTIONS
+  app_->parse(argc, argv);
+#else
   try {
     app_->parse(argc, argv);
   } catch(const CLI::ParseError &e) {
     exit(app_->exit(e));
   }
-
+#endif
   // handle --version flag
   if(optVersion_->count()) {
     std::cerr << buildVersion() << std::endl;

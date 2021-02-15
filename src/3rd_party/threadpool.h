@@ -174,6 +174,9 @@ inline auto ThreadPool::enqueue(F&& f, Args&&... args)
 
   auto inner_task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
   auto outer_task = [inner_task]() -> return_type {
+#if WITHOUT_EXCEPTIONS
+    return inner_task();
+#else
     try {
       return inner_task();
     }
@@ -183,6 +186,7 @@ inline auto ThreadPool::enqueue(F&& f, Args&&... args)
     catch(...) {
       ABORT("Caught unknown exception in sub-thread");
     }
+#endif
   };
 
   auto task = std::make_shared<std::packaged_task<return_type()>>(outer_task);

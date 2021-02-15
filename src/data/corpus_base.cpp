@@ -98,6 +98,9 @@ CorpusBase::CorpusBase(Ptr<Options> options, bool translate)
     //
     // Alignments and weights for non TSV input are handled later, after vocab creation.
     if(useGuidedAlignment) {
+  #if WITHOUT_EXCEPTIONS
+      alignFileIdx_ = std::stoul(options_->get<std::string>("guided-alignment"));
+  #else
       try {
         alignFileIdx_ = std::stoul(options_->get<std::string>("guided-alignment"));
       } catch(const std::invalid_argument& /*e*/) {
@@ -106,10 +109,14 @@ CorpusBase::CorpusBase(Ptr<Options> options, bool translate)
             "The value '{}' could not be converted to an unsigned integer.",
             options_->get<std::string>("guided-alignment"));
       }
+  #endif
       LOG(info, "[data] Using word alignments from TSV field no. {}", alignFileIdx_);
     }
 
     if(useDataWeighting) {
+  #if WITHOUT_EXCEPTIONS
+      weightFileIdx_ = std::stoul(options_->get<std::string>("data-weighting"));
+  #else
       try {
         weightFileIdx_ = std::stoul(options_->get<std::string>("data-weighting"));
       } catch(const std::invalid_argument& /*e*/) {
@@ -118,6 +125,7 @@ CorpusBase::CorpusBase(Ptr<Options> options, bool translate)
             "The value '{}' could not be converted to an unsigned integer.",
             options_->get<std::string>("data-weighting"));
       }
+  #endif
       LOG(info, "[data] Using weights from TSV field no. {}", weightFileIdx_);
     }
 

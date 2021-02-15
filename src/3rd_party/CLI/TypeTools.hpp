@@ -82,6 +82,12 @@ constexpr const char *type_name() {
 template <typename T,
           enable_if_t<(std::is_integral<T>::value && std::is_signed<T>::value), detail::enabler> = detail::dummy>
 bool lexical_cast(std::string input, T &output) {
+  #if WITHOUT_EXCEPTIONS
+        size_t n = 0;
+        long long output_ll = std::stoll(input, &n, 0);
+        output = static_cast<T>(output_ll);
+        return n == input.size() && static_cast<long long>(output) == output_ll;
+  #else
     try {
         size_t n = 0;
         long long output_ll = std::stoll(input, &n, 0);
@@ -92,6 +98,7 @@ bool lexical_cast(std::string input, T &output) {
     } catch(const std::out_of_range &) {
         return false;
     }
+  #endif
 }
 
 /// Unsigned integers
@@ -100,7 +107,12 @@ template <typename T,
 bool lexical_cast(std::string input, T &output) {
     if(!input.empty() && input.front() == '-')
         return false; // std::stoull happily converts negative values to junk without any errors.
-
+#if WITHOUT_EXCEPTIONS
+        size_t n = 0;
+        unsigned long long output_ll = std::stoull(input, &n, 0);
+        output = static_cast<T>(output_ll);
+        return n == input.size() && static_cast<unsigned long long>(output) == output_ll;
+#else
     try {
         size_t n = 0;
         unsigned long long output_ll = std::stoull(input, &n, 0);
@@ -111,11 +123,17 @@ bool lexical_cast(std::string input, T &output) {
     } catch(const std::out_of_range &) {
         return false;
     }
+#endif
 }
 
 /// Floats
 template <typename T, enable_if_t<std::is_floating_point<T>::value, detail::enabler> = detail::dummy>
 bool lexical_cast(std::string input, T &output) {
+#if WITHOUT_EXCEPTIONS
+        size_t n = 0;
+        output = static_cast<T>(std::stold(input, &n));
+        return n == input.size();
+#else
     try {
         size_t n = 0;
         output = static_cast<T>(std::stold(input, &n));
@@ -125,6 +143,7 @@ bool lexical_cast(std::string input, T &output) {
     } catch(const std::out_of_range &) {
         return false;
     }
+#endif
 }
 
 /// String and similar
