@@ -13,7 +13,6 @@ include_directories(${CMAKE_BINARY_DIR}/local/include)
 
 if (NOT COMPILE_WASM)
   set(EXCEPTION_WITH_CALLSTACK_SOURCE 3rd_party/ExceptionWithCallStack.cpp)
-  set(QUANTIZER_SOURCE optimizers/quantizer.cpp)
 endif()
 
 set(MARIAN_SOURCES
@@ -85,7 +84,7 @@ set(MARIAN_SOURCES
   rnn/cells.cpp
   rnn/attention.cpp
 
-  #${QUANTIZER_SOURCE}
+  #optimizers/quantizer.cpp
   optimizers/clippers.cpp
   optimizers/optimizers.cpp
 
@@ -127,6 +126,7 @@ if (NOT COMPILE_DECODER_ONLY)
     data/corpus_sqlite.cpp
     tensors/cpu/fbgemm/packed_gemm.cpp
     layers/lsh.cpp
+    optimizers/quantizer.cpp
 
     training/graph_group_async.cpp
     training/graph_group_sync.cpp
