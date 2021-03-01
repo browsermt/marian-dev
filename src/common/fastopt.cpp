@@ -94,6 +94,7 @@ template struct As<std::vector<int>>;
 // Windows: size_t = unsigned long long (8 bytes), uint64_t = unsigned long long (8 bytes)
 template struct As<std::vector<unsigned long long>>;
 template struct As<std::vector<unsigned long>>;
+template struct As<std::vector<unsigned int>>;
 template struct As<std::vector<float>>;
 template struct As<std::vector<double>>;
 template struct As<std::vector<std::string>>;
