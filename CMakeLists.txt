@@ -32,6 +32,10 @@ option(USE_STATIC_LIBS "Link statically against non-system libs" OFF)
 option(GENERATE_MARIAN_INSTALL_TARGETS "Generate Marian install targets (requires CMake 3.12+)" OFF)
 option(M32_BINARIES "Generate 32bit binaries even when building outside outside of WASM. Useful for" OFF)
 
+if(COMPILE_DECODER_ONLY)
+  set(SPM_BUILD_LIBRARY_ONLY ON CACHE BOOL "Build sentencepiece library only (skip executables)" ON)
+endif()
+
 if(M32_BINARIES OR COMPILE_WASM)
     set("BUILD_WIDTH" "-m32")
 else(M32_BINARIES OR COMPILE_WASM)
