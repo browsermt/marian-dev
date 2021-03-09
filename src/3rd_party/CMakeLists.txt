@@ -107,8 +107,6 @@ if(USE_SENTENCEPIECE)
       if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)
         set_property(TARGET sentencepiece-static APPEND_STRING PROPERTY COMPILE_FLAGS " -Wno-range-loop-construct")
       endif()
-      # get_property(SENTENCEPIECE_COMPILE_FLAGS TARGET ${t} PROPERTY COMPILE_FLAGS)
-      # message("-- SENTENCPIECE: compile flags for target ${t}: ${SENTENCEPIECE_COMPILE_FLAGS}")
     else()
     foreach(t sentencepiece-static sentencepiece_train-static
         spm_decode spm_encode spm_export_vocab spm_normalize spm_train)
@@ -151,7 +149,6 @@ include_directories(./pathie-cpp/include)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   if(NOT COMPILE_DECODER_ONLY)
-    #set_target_properties(SQLiteCpp PROPERTIES COMPILE_FLAGS
     set_property(TARGET SQLiteCpp APPEND_STRING PROPERTY COMPILE_FLAGS
       " -Wno-parentheses-equality -Wno-unused-value")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 9.0)

@@ -245,38 +245,14 @@ else(MSVC)
     add_compile_definitions(USE_SSE2)
     # Add compile definition for wasm builds
     add_compile_definitions(WASM)
-    if(0)
-      set(WASM_EMSCRIPTEN_COMPILE_OPTIONS -O3 "SHELL:-s WASM=1" "SHELL:-s ASSERTIONS=0" "SHELL:-s DISABLE_EXCEPTION_CATCHING=1" "SHELL:-s LLD_REPORT_UNDEFINED")
-      # necessary to be able to use files downloaded in JS (https://emscripten.org/docs/api_reference/Filesystem-API.html#including-file-system-support)
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "SHELL:-s FORCE_FILESYSTEM=1")
-      # necessary to allow the total amount of memory to change depending on the demands of the application
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "SHELL:-s ALLOW_MEMORY_GROWTH=1")
-      # Flag to preserve function names in compiled code when linking (https://emscripten.org/docs/tools_reference/emcc.html#emcc-g)
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS -g2)
-
-      # Imported CMAKE_CXX_FLAGS/CMAKE_C_FLAGS from below for wasm builds; This could be improved.
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:-std=c++11>" -pthread ${CMAKE_GCC_FLAGS} -fPIC ${INTRINSICS})
-      separate_arguments(DISABLE_GLOBALLY UNIX_COMMAND "${DISABLE_GLOBALLY}")
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS ${DISABLE_GLOBALLY})
-      # Disabling Pthreads + memory growth warning to be an error
-      # Pthreads + memory growth causes JS accessing the wasm memory to be slow
-      # https://github.com/WebAssembly/design/issues/1271
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS "-Wno-error=pthreads-mem-growth")
-
-      # Release flags from below for wasm builds;
-      list(APPEND WASM_EMSCRIPTEN_COMPILE_OPTIONS -funroll-loops)
-      add_compile_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
-      add_link_options(${WASM_EMSCRIPTEN_COMPILE_OPTIONS})
-    else()
-      set(PTHREAD_FLAG "-pthread")
-      set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
-      set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
-      set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=0 -s DISABLE_EXCEPTION_CATCHING=1 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
-      # Disabling Pthreads + memory growth warning to be an error
-      # Pthreads + memory growth causes JS accessing the wasm memory to be slow
-      # https://github.com/WebAssembly/design/issues/1271
-      list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
-    endif()
+    set(PTHREAD_FLAG "-pthread")
+    set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
+    set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
+    set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=0 -s DISABLE_EXCEPTION_CATCHING=1 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
+    # Disabling Pthreads + memory growth warning to be an error
+    # Pthreads + memory growth causes JS accessing the wasm memory to be slow
+    # https://github.com/WebAssembly/design/issues/1271
+    list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
 
     # use our customizations to the generated emscripted html and js resources
     set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "--pre-js ${CMAKE_SOURCE_DIR}/wasm/pre-module.js \

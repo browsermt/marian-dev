@@ -43,7 +43,6 @@ set(MARIAN_SOURCES
   data/factored_vocab.cpp
   data/corpus_base.cpp
   data/corpus.cpp
-  ##data/corpus_sqlite.cpp
   data/corpus_nbest.cpp
   data/text_input.cpp
   data/shortlist.cpp
@@ -64,7 +63,6 @@ set(MARIAN_SOURCES
   tensors/cpu/tensor_operators.cpp
   
   tensors/cpu/integer_common.cpp
-  #tensors/cpu/fbgemm/packed_gemm.cpp
 
   graph/expression_graph.cpp
   graph/expression_operators.cpp
@@ -79,12 +77,10 @@ set(MARIAN_SOURCES
   layers/generic.cpp
   layers/loss.cpp
   layers/weight.cpp
-  #layers/lsh.cpp
 
   rnn/cells.cpp
   rnn/attention.cpp
 
-  #optimizers/quantizer.cpp
   optimizers/clippers.cpp
   optimizers/optimizers.cpp
 
@@ -103,22 +99,8 @@ set(MARIAN_SOURCES
   translator/helpers.cpp
   translator/scorers.cpp
 
-  #training/graph_group_async.cpp
-  #training/graph_group_sync.cpp
-  #training/graph_group.cpp
-  #training/graph_group_singleton.cpp
-  #training/validator.cpp
-  #training/communicator.cpp
-
-  # this is only compiled to catch build errors, but not linked
-  #microsoft/quicksand.cpp
-  #microsoft/cosmos.cpp
-
   $<TARGET_OBJECTS:libyaml-cpp>
-  #$<TARGET_OBJECTS:SQLiteCpp>
   $<TARGET_OBJECTS:pathie-cpp>
-  #$<TARGET_OBJECTS:zlib>
-  #$<TARGET_OBJECTS:faiss>
 )
 
 if (NOT COMPILE_DECODER_ONLY)
@@ -143,10 +125,6 @@ if (NOT COMPILE_DECODER_ONLY)
     $<TARGET_OBJECTS:faiss>
   )
 endif()
-
-if(COMPILE_WASM)
-  #set_source_files_properties(common/binary.cpp PROPERTIES COMPILE_FLAGS -msse4.1)
-endif(COMPILE_WASM)
 
 add_library(marian STATIC ${MARIAN_SOURCES})
 
