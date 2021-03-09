@@ -19,18 +19,6 @@ RUN apt-get update -y  && apt-get --no-install-recommends -y install \
     automake \
     autogen \
     libtool && ln -s /usr/bin/libtoolize /usr/bin/libtool
-    #&& mkdir -p /usr/opt \
-    #&& cd /usr/opt
-    #&& git clone https://github.com/menduz/protobuf-wasm-lib
-
-# RUN cd /usr/opt/protobuf-wasm-lib \
-#     && /bin/bash -c "BRANCH=v3.6.1 ./prepare.sh"
-# RUN cd /usr/opt/protobuf-wasm-lib/protobuf \
-#     && bash -x ../build.sh
-# RUN cp /usr/bin/protoc /usr/opt/protobuf-wasm-lib/dist/bin/protoc
-
-# RUN apt-get --no-install-recommends -y install \
-#     libprotobuf-dev
 
 # Necessary for benchmarking
 RUN pip3 install sacrebleu
