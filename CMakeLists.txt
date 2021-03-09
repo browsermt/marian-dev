@@ -36,6 +36,10 @@ if(COMPILE_DECODER_ONLY)
   set(SPM_BUILD_LIBRARY_ONLY ON CACHE BOOL "Build sentencepiece library only (skip executables)" ON)
 endif()
 
+if (COMPILE_WASM)
+  set(WORMHOLE ON CACHE BOOL "Use WASM wormhole in intgemm https://bugzilla.mozilla.org/show_bug.cgi?id=1672160")
+endif()
+
 if(M32_BINARIES OR COMPILE_WASM)
     set("BUILD_WIDTH" "-m32")
 else(M32_BINARIES OR COMPILE_WASM)
