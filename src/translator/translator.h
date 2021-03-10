@@ -284,7 +284,7 @@ public:
   #if USE_PTHREADS
     data::BatchGenerator<data::TextInput> batchGenerator(corpus_, options_);
   #else
-    // Set to false to check if wasm builds run further
+    // Set to false to run non-async mode
     data::BatchGenerator<data::TextInput> batchGenerator(corpus_, options_, nullptr, false);
   #endif
 
