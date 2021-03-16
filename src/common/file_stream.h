@@ -26,7 +26,7 @@
 #pragma warning(push) // 4101: 'identifier' : unreferenced local variable. One parameter variable in zstr.hpp is not used.
 #pragma warning(disable : 4101)
 #endif
-#ifndef DECODER_ONLY
+#ifndef WASM
 #include "3rd_party/zstr/zstr.hpp"
 #endif
 #ifdef _MSC_VER
