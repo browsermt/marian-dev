@@ -80,17 +80,12 @@ class Config {
             } else if(val == "false" || val == "off" || val == "no") {
                 return std::vector<std::string>();
             } else {
-            #if WITHOUT_EXCEPTIONS
-                    size_t ui = std::stoul(val);
-                    return std::vector<std::string>(ui);
-            #else
                 try {
                     size_t ui = std::stoul(val);
                     return std::vector<std::string>(ui);
                 } catch(const std::invalid_argument &) {
                     throw ConversionError::TrueFalse(item.fullname());
                 }
-            #endif
             }
         } else {
             throw ConversionError::TooManyInputsFlag(item.fullname());

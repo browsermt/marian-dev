@@ -303,15 +303,11 @@ class Option : public OptionBase<Option> {
     /// Adds a validator-like function that can change result
     Option *transform(std::function<std::string(std::string)> func) {
         validators_.emplace_back([func](std::string &inout) {
-        #if WITHOUT_EXCEPTIONS
-            inout = func(inout);
-        #else
             try {
                 inout = func(inout);
             } catch(const ValidationError &e) {
                 return std::string(e.what());
             }
-        #endif
             return std::string();
         });
         return this;

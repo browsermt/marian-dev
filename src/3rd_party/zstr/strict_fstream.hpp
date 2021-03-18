@@ -120,17 +120,12 @@ struct static_method_holder
     static void check_peek(std::istream * is_p, const std::string& filename, std::ios_base::openmode mode)
     {
         bool peek_failed = true;
-    #if WITHOUT_EXCEPTIONS
-            is_p->peek();
-            peek_failed = is_p->fail();
-    #else
         try
         {
             is_p->peek();
             peek_failed = is_p->fail();
         }
         catch (const std::ios_base::failure &e) {}
-    #endif
         if (peek_failed)
         {
             throw Exception(std::string("strict_fstream: open('")
