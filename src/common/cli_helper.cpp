@@ -15,9 +15,6 @@ void makeAbsolutePaths(YAML::Node& config,
       return nodePath;
 
     // replace relative path w.r.t. config directory
-  #if WITHOUT_EXCEPTIONS
-      return canonical(filesystem::Path{nodePath}, configDir).string();
-  #else
     try {
       return canonical(filesystem::Path{nodePath}, configDir).string();
     } catch(filesystem::FilesystemError& e) {
@@ -28,7 +25,6 @@ void makeAbsolutePaths(YAML::Node& config,
               / filesystem::Path{nodePath}.filename())
           .string();
     }
-  #endif
   };
 
   processPaths(config, transformFunc, PATHS);

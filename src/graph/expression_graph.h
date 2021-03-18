@@ -256,11 +256,6 @@ public:
   }
 
   bool fits() {
-  #if WITHOUT_EXCEPTIONS
-    tensors_->throwAtReallocation(true);
-    backprop();
-    tensors_->throwAtReallocation(false);
-  #else
     try {
       tensors_->throwAtReallocation(true);
       backprop();
@@ -269,7 +264,6 @@ public:
       tensors_->throwAtReallocation(false);
       return false;
     }
-  #endif
     return true;
   }
 

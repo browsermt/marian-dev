@@ -63,13 +63,6 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options) {
 
     // load options specific for the scorer
     auto modelOptions = New<Options>(options->clone());
-  #if WITHOUT_EXCEPTIONS
-      if(!options->get<bool>("ignore-model-config")) {
-        YAML::Node modelYaml;
-        io::getYamlFromModel(modelYaml, "special:model.yml", model);
-        modelOptions->merge(modelYaml, true);
-      }
-  #else
     try {
       if(!options->get<bool>("ignore-model-config")) {
         YAML::Node modelYaml;
@@ -79,7 +72,6 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options) {
     } catch(std::runtime_error&) {
       LOG(warn, "No model settings found in model file");
     }
-  #endif
 
     // l2r and r2l cannot be used in the same ensemble
     if(models.size() > 1 && modelOptions->has("right-left")) {
@@ -113,13 +105,6 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<c
 
     // load options specific for the scorer
     auto modelOptions = New<Options>(options->clone());
-  #if WITHOUT_EXCEPTIONS
-      if(!options->get<bool>("ignore-model-config")) {
-        YAML::Node modelYaml;
-        io::getYamlFromModel(modelYaml, "special:model.yml", ptr);
-        modelOptions->merge(modelYaml, true);
-      }
-  #else
     try {
       if(!options->get<bool>("ignore-model-config")) {
         YAML::Node modelYaml;
@@ -129,7 +114,6 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<c
     } catch(std::runtime_error&) {
       LOG(warn, "No model settings found in model file");
     }
-  #endif
 
     scorers.push_back(scorerByType(fname, weights[i], ptr, modelOptions));
     i++;
