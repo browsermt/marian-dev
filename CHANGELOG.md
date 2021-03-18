@@ -32,6 +32,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Quantized training (fixed point or log-based quantization) with --quantize-bits N command
 - Support for loading lexical shortlist from a binary blob
 - Integrate a shortlist converter (which can convert a text lexical shortlist to a binary shortlist) into marian-conv with --shortlist option
+- Added ONNXJS submodule to use its wasm-compatible sgemm routine for wasm builds
+- Enable compiling marian on wasm platform
 
 ### Fixed
 - Segfault of spm_train when compiled with -DUSE_STATIC_LIBS=ON seems to have gone away with update to newer SentencePiece version.
@@ -56,8 +58,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added a few missing header files in shortlist.h and beam_search.h.
 - Improved handling for receiving SIGTERM during training. By default, SIGTERM triggers 'save (now) and exit'. Prior to this fix, batch pre-fetching did not check for this sigal, potentially delaying exit considerably. It now pays attention to that. Also, the default behaviour of save-and-exit can now be disabled on the command line with --sigterm exit-immediately.
 - Fix the runtime failures for FASTOPT on 32-bit builds (wasm just happens to be 32-bit) because it uses hashing with an inconsistent mix of uint64_t and size_t.
+- Fix loading the binary model on 32-bit builds and for wasm platform
 
 ### Changed
+- Updated intgemm repository to version 1a176394bb0c2d243c42fe574e063924a92aa120 from https://github.com/kpu/intgemm.
+- Changed SentencePiece repository from https://github.com/google/sentencepiece to the version 3ffdc0065a03cadd9d0e5e123aaf9b6ea7ffb05d of https://github.com/browsermt/sentencepiece.
 - Updated SentencePiece repository to version 8336bbd0c1cfba02a879afe625bf1ddaf7cd93c5 from https://github.com/google/sentencepiece. 
 - Enabled compilation of SentencePiece by default since no dependency on protobuf anymore. 
 - Changed default value of --sentencepiece-max-lines from 10000000 to 2000000 since apparently the new version doesn't sample automatically anymore (Not quite clear how that affects quality of the vocabulary).
