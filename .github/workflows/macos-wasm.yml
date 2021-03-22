@@ -1,0 +1,60 @@
+name: MacOS WASM
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-wasm:
+    name: WASM
+    runs-on: macos-10.15
+
+    steps:
+    - name: Setup Emscripten toolchain
+      uses: mymindstorm/setup-emsdk@v8
+
+    - name: Verify Emscripten setup
+      run: emcc -v
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Configure builds
+      run: |
+        mkdir -p build-wasm
+        cd build-wasm
+        emcmake cmake \
+          -DCOMPILE_CUDA=off \
+          -DUSE_DOXYGEN=off \
+          -DCOMPILE_EXAMPLES=off \
+          -DCOMPILE_SERVER=off \
+          -DCOMPILE_TESTS=off \
+          -DUSE_FBGEMM=off \
+          -DUSE_SENTENCEPIECE=on \
+          -DUSE_STATIC_LIBS=on \
+          -DUSE_MKL=off \
+          -DCOMPILE_WITHOUT_EXCEPTIONS=on \
+          -DUSE_WASM_COMPATIBLE_BLAS=on \
+          -DCOMPILE_DECODER_ONLY=on \
+          -DCOMPILE_WITH_PTHREADS=off \
+          -DCOMPILE_WASM=on ../
+
+    - name: Compile
+      working-directory: build-wasm
+      run: emmake make -j2
+
+    - name: Check artifacts
+      working-directory: build-wasm
+      run: |
+        ls -all .
+        if ls marian-decoder.wasm &>/dev/null && ls marian-decoder.js &>/dev/null
+        then
+          echo "Artifacts Successfully Generated"
+        else
+          echo "Failure: Artifacts Not Present"
+          exit 1
+        fi
