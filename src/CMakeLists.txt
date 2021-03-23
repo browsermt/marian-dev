@@ -11,10 +11,6 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR}/3rd_party/intgemm)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/3rd_party)
 include_directories(${CMAKE_BINARY_DIR}/local/include)
 
-if (NOT COMPILE_WASM)
-  set(EXCEPTION_WITH_CALLSTACK_SOURCE 3rd_party/ExceptionWithCallStack.cpp)
-endif()
-
 set(MARIAN_SOURCES
   common/aliases.cpp
   common/fastopt.cpp
@@ -48,7 +44,6 @@ set(MARIAN_SOURCES
   data/shortlist.cpp
 
   3rd_party/cnpy/cnpy.cpp
-  ${EXCEPTION_WITH_CALLSTACK_SOURCE}
   
   3rd_party/onnx/protobuf/onnx-ml.pb-wrapper.cpp
 
@@ -103,8 +98,10 @@ set(MARIAN_SOURCES
   $<TARGET_OBJECTS:pathie-cpp>
 )
 
-if (NOT COMPILE_DECODER_ONLY)
+if (NOT COMPILE_WASM)
   list(APPEND MARIAN_SOURCES
+    3rd_party/ExceptionWithCallStack.cpp
+
     data/corpus_sqlite.cpp
     tensors/cpu/fbgemm/packed_gemm.cpp
     layers/lsh.cpp
@@ -218,7 +215,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
                           SUFFIX     ".html")
   endif(COMPILE_WASM)
 
-  if (NOT COMPILE_DECODER_ONLY)
+  if (NOT COMPILE_WASM)
   add_executable(marian_train command/marian_main.cpp)
   set_target_properties(marian_train PROPERTIES OUTPUT_NAME marian)
   target_compile_options(marian_train PRIVATE ${ALL_WARNINGS})
@@ -279,7 +276,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
     endif(MSVC)
     set(EXECUTABLES ${EXECUTABLES} marian_server)
   endif(COMPILE_SERVER)
-  endif(NOT COMPILE_DECODER_ONLY)
+  endif(NOT COMPILE_WASM)
 
   foreach(exec ${EXECUTABLES})
     target_link_libraries(${exec} marian)

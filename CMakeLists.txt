@@ -27,24 +27,16 @@ option(USE_NCCL "Use NCCL library" ON)
 option(USE_SENTENCEPIECE "Download and compile SentencePiece" ON)
 option(USE_STATIC_LIBS "Link statically against non-system libs" OFF)
 option(GENERATE_MARIAN_INSTALL_TARGETS "Generate Marian install targets (requires CMake 3.12+)" OFF)
-option(M32_BINARIES "Generate 32bit binaries even when building outside outside of WASM. Useful for" OFF)
+option(M32_BINARIES "Generate 32bit binaries even when building outside of WASM. Useful for testing some WASM specific functionality without the need for the compiling to WASM." OFF)
 option(COMPILE_WASM "Compile customized marian for WASM target" OFF)
 
 # cmake options that are dependent on COMPILE_WASM cmake option
-CMAKE_DEPENDENT_OPTION(COMPILE_DECODER_ONLY "Compile marian-decoder only" ON
-                       "COMPILE_WASM" OFF)
 CMAKE_DEPENDENT_OPTION(COMPILE_WITH_PTHREADS "Compile with pthreads support" OFF
                        "COMPILE_WASM" ON)
 CMAKE_DEPENDENT_OPTION(USE_WASM_COMPATIBLE_BLAS "Compile with wasm compatible blas" ON
                        "COMPILE_WASM" OFF)
 CMAKE_DEPENDENT_OPTION(COMPILE_WITHOUT_EXCEPTIONS "Compile without exceptions" ON
                        "COMPILE_WASM" OFF)
-
-if(COMPILE_DECODER_ONLY)
-  set(SPM_BUILD_LIBRARY_ONLY ON CACHE BOOL "Build sentencepiece library only (skip executables)" ON)
-  # Enable building decoder-only source code.
-  add_compile_definitions(DECODER_ONLY)
-endif()
 
 if (COMPILE_WASM)
   set(WORMHOLE ON CACHE BOOL "Use WASM wormhole in intgemm https://bugzilla.mozilla.org/show_bug.cgi?id=1672160")
@@ -298,12 +290,7 @@ endif()
 if(USE_SENTENCEPIECE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_SENTENCEPIECE -D_USE_INTERNAL_STRING_VIEW")
   LIST(APPEND CUDA_NVCC_FLAGS -DUSE_SENTENCEPIECE; )
-  if (COMPILE_DECODER_ONLY)
-    # We don't need sentencepiece_train for decoder-only builds
-    set(EXT_LIBS ${EXT_LIBS} sentencepiece)
-  else()
-    set(EXT_LIBS ${EXT_LIBS} sentencepiece sentencepiece_train)
-  endif()
+  set(EXT_LIBS ${EXT_LIBS} sentencepiece sentencepiece_train)
 endif()
 
 if(USE_ONNX)

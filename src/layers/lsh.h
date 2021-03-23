@@ -18,7 +18,7 @@ public:
   Expr apply(Expr query, Expr values, Expr bias);
 
 private:
-#ifndef DECODER_ONLY
+#ifndef WASM
   Ptr<faiss::IndexLSH> index_;
 #endif
   size_t indexHash_{0};
