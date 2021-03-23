@@ -20,7 +20,7 @@ For docker based builds, please refer [Docker Compilation Steps](#Docker-Compila
         ```bash
         mkdir build-wasm; cd build-wasm
 
-        emcmake cmake -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on -DUSE_DOXYGEN=off -DUSE_FBGEMM=off -DUSE_MKL=off -DCOMPILE_WITHOUT_EXCEPTIONS=on -DUSE_WASM_COMPATIBLE_BLAS=on -DCOMPILE_DECODER_ONLY=on -DCOMPILE_WITH_PTHREADS=off -DCOMPILE_WASM=on ../
+        emcmake cmake -DCOMPILE_CUDA=off -DUSE_STATIC_LIBS=on -DUSE_DOXYGEN=off -DUSE_FBGEMM=off -DUSE_MKL=off -DUSE_NCCL=off -DCOMPILE_WASM=on ../
 
         emmake make -j
         ```

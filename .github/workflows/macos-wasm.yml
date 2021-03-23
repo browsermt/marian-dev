@@ -37,10 +37,6 @@ jobs:
           -DUSE_SENTENCEPIECE=on \
           -DUSE_STATIC_LIBS=on \
           -DUSE_MKL=off \
-          -DCOMPILE_WITHOUT_EXCEPTIONS=on \
-          -DUSE_WASM_COMPATIBLE_BLAS=on \
-          -DCOMPILE_DECODER_ONLY=on \
-          -DCOMPILE_WITH_PTHREADS=off \
           -DCOMPILE_WASM=on ../
 
     - name: Compile

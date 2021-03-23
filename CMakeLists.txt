@@ -9,31 +9,41 @@ project(marian CXX C)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include(CMakeDependentOption)
+
 # Custom CMake options
 option(COMPILE_CPU "Compile CPU version" ON)
 option(COMPILE_CUDA "Compile GPU version" ON)
 option(COMPILE_EXAMPLES "Compile examples" OFF)
 option(COMPILE_SERVER "Compile marian-server" OFF)
 option(COMPILE_TESTS "Compile tests" OFF)
-option(COMPILE_WASM "Compile marian as WASM target" OFF)
-option(COMPILE_DECODER_ONLY "Compile marian-decoder only" OFF)
-option(COMPILE_WITH_PTHREADS "Compile with pthreads support" ON)
 option(USE_CCACHE "Use ccache compiler cache (https://ccache.dev)" OFF)
 option(USE_CUDNN "Use CUDNN library" OFF)
 option(USE_DOXYGEN "Build documentation with Doxygen" ON)
 option(USE_FBGEMM "Use FBGEMM" OFF)
 option(USE_MKL "Compile with MKL support" ON)
-option(USE_WASM_COMPATIBLE_BLAS "Compile with a WASM compatible blas for decoder only builds" OFF)
-option(COMPILE_WITHOUT_EXCEPTIONS "Compile without exceptions" OFF)
 option(USE_MPI "Use MPI library" OFF)
 option(USE_NCCL "Use NCCL library" ON)
 option(USE_SENTENCEPIECE "Download and compile SentencePiece" ON)
 option(USE_STATIC_LIBS "Link statically against non-system libs" OFF)
 option(GENERATE_MARIAN_INSTALL_TARGETS "Generate Marian install targets (requires CMake 3.12+)" OFF)
 option(M32_BINARIES "Generate 32bit binaries even when building outside outside of WASM. Useful for" OFF)
+option(COMPILE_WASM "Compile customized marian for WASM target" OFF)
+
+# cmake options that are dependent on COMPILE_WASM cmake option
+CMAKE_DEPENDENT_OPTION(COMPILE_DECODER_ONLY "Compile marian-decoder only" ON
+                       "COMPILE_WASM" OFF)
+CMAKE_DEPENDENT_OPTION(COMPILE_WITH_PTHREADS "Compile with pthreads support" OFF
+                       "COMPILE_WASM" ON)
+CMAKE_DEPENDENT_OPTION(USE_WASM_COMPATIBLE_BLAS "Compile with wasm compatible blas" ON
+                       "COMPILE_WASM" OFF)
+CMAKE_DEPENDENT_OPTION(COMPILE_WITHOUT_EXCEPTIONS "Compile without exceptions" ON
+                       "COMPILE_WASM" OFF)
 
 if(COMPILE_DECODER_ONLY)
   set(SPM_BUILD_LIBRARY_ONLY ON CACHE BOOL "Build sentencepiece library only (skip executables)" ON)
+  # Enable building decoder-only source code.
+  add_compile_definitions(DECODER_ONLY)
 endif()
 
 if (COMPILE_WASM)
@@ -51,11 +61,6 @@ if(NOT COMPILE_WASM)
   # Prevent invoking that logic for WASM builds.
   set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
 endif()
-
-if(COMPILE_DECODER_ONLY)
-  # Enable building decoder-only source code.
-  add_compile_definitions(DECODER_ONLY)
-endif(COMPILE_DECODER_ONLY)
 
 if(COMPILE_WITH_PTHREADS)
   # Need to set compile definition as well
