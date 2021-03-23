@@ -31,7 +31,7 @@ option(M32_BINARIES "Generate 32bit binaries even when building outside of WASM.
 option(COMPILE_WASM "Compile customized marian for WASM target" OFF)
 
 # cmake options that are dependent on COMPILE_WASM cmake option
-CMAKE_DEPENDENT_OPTION(COMPILE_WITH_PTHREADS "Compile with pthreads support" OFF
+CMAKE_DEPENDENT_OPTION(USE_THREADS "Compile with multi-threading support" OFF
                        "COMPILE_WASM" ON)
 CMAKE_DEPENDENT_OPTION(USE_WASM_COMPATIBLE_BLAS "Compile with wasm compatible blas" ON
                        "COMPILE_WASM" OFF)
@@ -54,7 +54,7 @@ if(NOT COMPILE_WASM)
   set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
 endif()
 
-if(COMPILE_WITH_PTHREADS)
+if(USE_THREADS)
   # Need to set compile definition as well
   add_compile_definitions(USE_PTHREADS)
 endif()
