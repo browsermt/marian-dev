@@ -10,13 +10,12 @@ if(NOT COMPILE_DECODER_ONLY)
 endif()
 add_subdirectory(./pathie-cpp)
 
-if(COMPILE_CPU)
-  if(USE_WASM_COMPATIBLE_BLAS)
-    add_subdirectory(./onnxjs)
-  endif(USE_WASM_COMPATIBLE_BLAS)
-  set(INTGEMM_DONT_BUILD_TESTS ON CACHE BOOL "Disable intgemm tests")
-  add_subdirectory(./intgemm)
-endif(COMPILE_CPU)
+set(INTGEMM_DONT_BUILD_TESTS ON CACHE BOOL "Disable intgemm tests")
+add_subdirectory(./intgemm)
+
+if(USE_WASM_COMPATIBLE_BLAS)
+  add_subdirectory(./onnxjs)
+endif(USE_WASM_COMPATIBLE_BLAS)
 
 if(USE_FBGEMM)
   # @TODO: find out if this is somehow harmful. This is supppressing CMake warnings for CMAKE_SUPPRESS_DEVELOPER_WARNINGS
