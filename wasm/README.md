@@ -1,6 +1,9 @@
 
 ## WASM
+
 ### Compiling wasm marian-decoder on local machine
+
+For docker based builds, please refer [Docker Compilation Steps](#Docker-Compilation)
 
 1. Download and Install Emscripten using following instructions (skip this step if emsdk tool chain is already installed)
     * Get the latest sdk: `git clone https://github.com/emscripten-core/emsdk.git`
@@ -24,16 +27,21 @@
 
         The artifacts (.js and .wasm files) will be available in `build-wasm` folder.
 
-3. Package files to WASM-compiled runtime
+### <a name="Perform-Translation"></a> Performing Translation using wasm marian-decoder
 
-    This step is required if you want to perform translation using wasm binary.
+1. Pre-processing (Package files to WASM-compiled runtime)
 
-    The script `package-benchmark.sh` inside `wasm` folder downloads and packages the Bergamot project specific Spanish to English translation models, vocabulary, lexical shortlist files and a News test file as an input for translation. (Please install `sacrebleu` before if not installed already using command: `pip install sacrebleu`)
+    This step is required to be able to perform translation using wasm binary.
+
+    The script `package-benchmark.sh` inside `wasm` folder downloads and packages the Bergamot project specific Spanish to English translation models, vocabulary, lexical shortlist files and a News test file as source text for translation. (Please install `sacrebleu` before if not installed already using command: `pip install sacrebleu`).
+
+    From the build directory (`build-wasm` for local builds or `build-wasm-docker` for docker builds), run:
+
     ```bash
     bash ../wasm/package-benchmark.sh
     ```
 
-4. Perform Translation
+2. Perform Translation
     1. Launch the emscripten-generated HTML page in a web browser using following commands:
         ```bash
         emrun --no_browser --port 8000 .
@@ -89,51 +97,45 @@ If you used the script `package-benchmark.sh` mentioned above then open followin
 Note that intgemm options are only available in Firefox Nightly verified by visiting [this link](https://axis-of-eval.org/sandbox/wormhole-test.html).
 
 
-### Compiling wasm marian-decoder on Docker
+### <a name="Docker-Compilation"></a> Compiling wasm marian-decoder on Docker
 
-1. Prepare docker image for WASM compilation (a step required only for the first time):
+Alternatively, wasm marian-decoder can also be compiled on docker.
+
+1. Prepare docker image for WASM compilation
+    This step is required only for the first time (or after any changes to docker image)
 
     ```bash
     make wasm-image
     ```
-2. Remove the marian-decoder build dir, forcing the next compilation attempt to start from scratch:
 
-    ```bash
-    make clean-wasm-docker
-    ```
-
-3. Compile to wasm:
+2. Compile to wasm
 
     ```bash
     make compile-wasm-docker
     ```
+    The artifacts (.js and .wasm files) will be available in `build-wasm-docker` folder in root of this repository.
 
-4. Package files
-    Create a directory called `models/` in the repository root and fill it with relevant files (model, vocabulary, lexical shortlist etc.) that should be available to the WASM-compiled runtime, then run:
+3. Performing Translation
+
+    Please follow [Performing Translation](#Perform-Translation) for this.
+
+
+#### Additional helpful instructions for docker based builds
+
+1. Clean build (to start next compilation from scratch)
 
     ```bash
-    make package-files-wasm-docker
+    make clean-wasm-docker
     ```
-
-    Please note that all the files and folders of `models/` directory will be available/mounted in the root folder (`/`) of empscripten emulated file system following the same directory structure as of the `models/`. See 
-
-5. Launch the emscripten-generated HTML page in a web browser:
+2. Compile and run a wasm stdin test:
 
     ```bash
-    make run-wasm-docker
+    make compile-and-run-stdin-test-wasm
+    open "http://localhost:8009/compile-test-stdin-wasm.html"
     ```
 
-#### Debugging
+3. Enter a docker container shell for manually running commands:
 
-Compile and run a wasm stdin test:
-
-```bash
-make compile-and-run-stdin-test-wasm
-open "http://localhost:8009/compile-test-stdin-wasm.html"
-```
-
-Enter a docker container shell for manually running commands:
-
-```bash
-make wasm-shell
-```
+    ```bash
+    make wasm-shell
+    ```

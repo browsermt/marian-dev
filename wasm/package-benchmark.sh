@@ -1,25 +1,20 @@
 #!/bin/bash
 
 if [[ ! -e ../models ]]; then
-    cd ..
-    mkdir -p models
-    if [[ ! -e students ]]; then
+    mkdir -p ../models
+    if [[ ! -e ../students ]]; then
         echo "Cloning https://github.com/browsermt/students)"
-        git clone --depth 1 --branch main --single-branch https://github.com/browsermt/students
+        git clone --depth 1 --branch main --single-branch https://github.com/browsermt/students ../
     fi
     
-    echo "Download files"
-    cd students/esen/
-    ./download-models.sh
-    cd esen.student.tiny11
+    echo "Downloading files"
+    ../students/esen/download-models.sh
 
-    echo "Copying files to models folder"
-    cp vocab.esen* model* lex.s2t* ../../../models/
-    sacrebleu -t wmt13 -l es-en --echo src > ../../../models/newstest2013.es
-    cd ../../../
-    head -n300 models/newstest2013.es > models/newstest2013.es.top300lines
-    gunzip models/*
-    cd build-wasm
+    echo "Copying downloaded files to models folder"
+    cp ../students/esen/esen.student.tiny11/vocab.esen* ../students/esen/esen.student.tiny11/model* ../students/esen/esen.student.tiny11/lex.s2t* ../models/
+    sacrebleu -t wmt13 -l es-en --echo src > ../models/newstest2013.es
+    head -n300 ../models/newstest2013.es > ../models/newstest2013.es.top300lines
+    gunzip ../models/*
 else
     echo "models directory already exists in root folder; Using it to package files without downloading anything"
 fi

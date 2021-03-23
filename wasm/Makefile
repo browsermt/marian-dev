@@ -1,11 +1,11 @@
 # -*- mode: makefile-gmake; indent-tabs-mode: true; tab-width: 4 -*-
 SHELL   		= bash
 PWD     		= $(shell pwd)
-WASM_IMAGE	    = local/marian-build-wasm-docker
+WASM_IMAGE	    = local/marian-wasm-docker
 
 # Build the Docker image for WASM builds
 wasm-image:
-	docker build -t local/marian-build-wasm-docker ./wasm/
+	docker build -t local/marian-wasm-docker .
 
 # Commands for native compilation:
 cmake_native_decoder_cmd  = cmake --debug-output -Wno-dev
@@ -48,7 +48,7 @@ compile-wasm-docker: ${HOME}/.ccache
 	${run_on_docker} ${WASM_IMAGE} bash -c 'mkdir -p ${BUILD_DIR} && \
 cd ${BUILD_DIR} && \
 (emcmake ${cmake_wasm_decoder_cmd} .. && \
-(emmake make -j3))'
+(emmake make -j4))'
 
 # Prepare files to be used with WASM marian-decoder
 package-files-wasm-docker: BUILD_DIR = /repo/build-wasm-docker

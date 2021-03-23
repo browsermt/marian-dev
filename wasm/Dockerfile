@@ -11,14 +11,5 @@ RUN apt-get update \
     python3 \
     default-jre
 
-# Deps to compile protobuf from source + the protoc binary which we need natively
-RUN apt-get update -y  && apt-get --no-install-recommends -y install \
-    protobuf-compiler \
-    autoconf \
-    autotools-dev \
-    automake \
-    autogen \
-    libtool && ln -s /usr/bin/libtoolize /usr/bin/libtool
-
 # Necessary for benchmarking
 RUN pip3 install sacrebleu
