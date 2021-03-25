@@ -1,4 +1,4 @@
-name: MacOS WASM
+name: WASM (wasm-customized marian)
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-wasm:
-    name: WASM
+    name: WASM CPU-only
     runs-on: macos-10.15
 
     steps:
@@ -37,6 +37,7 @@ jobs:
           -DUSE_SENTENCEPIECE=on \
           -DUSE_STATIC_LIBS=on \
           -DUSE_MKL=off \
+          -DUSE_WASM_COMPATIBLE_MARIAN=on \
           -DCOMPILE_WASM=on ../
 
     - name: Compile

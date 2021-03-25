@@ -98,7 +98,7 @@ set(MARIAN_SOURCES
   $<TARGET_OBJECTS:pathie-cpp>
 )
 
-if (NOT COMPILE_WASM)
+if (NOT USE_WASM_COMPATIBLE_MARIAN)
   list(APPEND MARIAN_SOURCES
     3rd_party/ExceptionWithCallStack.cpp
 
@@ -215,7 +215,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
                           SUFFIX     ".html")
   endif(COMPILE_WASM)
 
-  if (NOT COMPILE_WASM)
+  if (NOT USE_WASM_COMPATIBLE_MARIAN)
   add_executable(marian_train command/marian_main.cpp)
   set_target_properties(marian_train PROPERTIES OUTPUT_NAME marian)
   target_compile_options(marian_train PRIVATE ${ALL_WARNINGS})
@@ -276,7 +276,7 @@ if (NOT COMPILE_LIBRARY_ONLY)
     endif(MSVC)
     set(EXECUTABLES ${EXECUTABLES} marian_server)
   endif(COMPILE_SERVER)
-  endif(NOT COMPILE_WASM)
+  endif(NOT USE_WASM_COMPATIBLE_MARIAN)
 
   foreach(exec ${EXECUTABLES})
     target_link_libraries(${exec} marian)

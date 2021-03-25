@@ -17,6 +17,7 @@ cmake_native_decoder_cmd += -DUSE_FBGEMM=off
 cmake_native_decoder_cmd += -DCOMPILE_LIBRARY_ONLY=off
 cmake_native_decoder_cmd += -DUSE_MKL=off
 cmake_native_decoder_cmd += -DCOMPILE_CPU=on
+cmake_native_decoder_cmd += -DUSE_WASM_COMPATIBLE_MARIAN=on
 
 # Commands for wasm compilation:
 cmake_wasm_decoder_cmd = ${cmake_native_decoder_cmd}

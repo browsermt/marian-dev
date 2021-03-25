@@ -2,7 +2,7 @@
 include_directories(.)
 
 add_subdirectory(./yaml-cpp)
-if(NOT COMPILE_WASM)
+if(NOT USE_WASM_COMPATIBLE_MARIAN)
   add_subdirectory(./SQLiteCpp)
   add_subdirectory(./zlib)
   add_subdirectory(./faiss)
@@ -128,7 +128,7 @@ include_directories(./CLI)
 include_directories(./pathie-cpp/include)
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  if(NOT COMPILE_WASM)
+  if(NOT USE_WASM_COMPATIBLE_MARIAN)
   #set_target_properties(SQLiteCpp PROPERTIES COMPILE_FLAGS
   set_property(TARGET SQLiteCpp APPEND_STRING PROPERTY COMPILE_FLAGS
     " -Wno-parentheses-equality -Wno-unused-value")
