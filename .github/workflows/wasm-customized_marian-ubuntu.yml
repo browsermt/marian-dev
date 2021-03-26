@@ -1,4 +1,4 @@
-name: WASM (wasm-customized marian) MacOS
+name: WASM (wasm-customized marian) Ubuntu
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build-wasm:
     name: WASM CPU-only
-    runs-on: macos-10.15
+    runs-on: ubuntu-latest
 
     steps:
     - name: Setup Emscripten toolchain
