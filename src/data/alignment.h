@@ -47,6 +47,11 @@ public:
   void sort();
 
   /**
+   * @brief Sorts alignments in place by target indices in ascending order.
+   */
+  void sortByTarget();
+
+  /**
    * @brief Returns textual representation.
    */
   std::string toString() const;
@@ -57,7 +62,7 @@ public:
 typedef std::vector<std::vector<float>> SoftAlignment; // [trg pos][beam depth * max src length * batch size]
 
 WordAlignment ConvertSoftAlignToHardAlign(SoftAlignment alignSoft,
-                                          float threshold = 1.f);
+                                          float threshold = 1.f, bool sortByTarget = false);
 
 std::string SoftAlignToString(SoftAlignment align);
 

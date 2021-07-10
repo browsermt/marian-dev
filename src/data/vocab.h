@@ -2,6 +2,7 @@
 
 #include "common/definitions.h"
 #include "data/types.h"
+#include "data/alignment.h"
 #include "common/options.h"
 #include "common/file_stream.h"
 
@@ -62,7 +63,6 @@ public:
                                std::vector<string_view> &byteRanges,
                                bool ignoreEOS = true) const;
 
-  // convert sequence of token ids to single line, can perform detokenization
   std::string decode(const Words& sentence,
                      bool ignoreEOS = true) const;
 

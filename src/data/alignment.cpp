@@ -22,6 +22,12 @@ void WordAlignment::sort() {
   });
 }
 
+void WordAlignment::sortByTarget() {
+  std::sort(data_.begin(), data_.end(), [](const Point& a, const Point& b) {
+    return (a.tgtPos== b.tgtPos) ? a.srcPos < b.srcPos : a.tgtPos < b.tgtPos;
+  });
+}
+
 std::string WordAlignment::toString() const {
   std::stringstream str;
   for(auto p = begin(); p != end(); ++p) {
@@ -33,7 +39,8 @@ std::string WordAlignment::toString() const {
 }
 
 WordAlignment ConvertSoftAlignToHardAlign(SoftAlignment alignSoft,
-                                          float threshold /*= 1.f*/) {
+                                          float threshold /*= 1.f*/, 
+                                          bool sortByTarget /*=false*/) {
   WordAlignment align;
   // Alignments by maximum value
   if(threshold == 1.f) {
@@ -60,7 +67,11 @@ WordAlignment ConvertSoftAlignToHardAlign(SoftAlignment alignSoft,
   }
 
   // Sort alignment pairs in ascending order
-  align.sort();
+  if (!sortByTarget){
+    align.sort();
+  } else {
+    align.sortByTarget();
+  }
 
   return align;
 }

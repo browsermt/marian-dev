@@ -1,6 +1,7 @@
 #pragma once
 
 #include "data/types.h"
+#include "data/alignment.h"
 #include "common/definitions.h"
 #include "common/utils.h"
 #include "common/file_stream.h"
@@ -49,7 +50,6 @@ public:
                                        const {
     ABORT("decodeWithByteRanges(...) is not implemented for this VocabType.");
   }
-
 
   virtual std::string decode(const Words& sentence,
                              bool ignoreEos = true) const = 0;
