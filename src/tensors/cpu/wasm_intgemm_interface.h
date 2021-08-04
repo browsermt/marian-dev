@@ -22,12 +22,6 @@ typedef struct QuantizedBuffer {
     int8_t zero_point;
 } QuantizedBuffer;
 
-/* Prepare B in a CPU-dependent format from an already transposed (routine not provided) and
- * a CPU-independent format of B. The prepared B will be used as an input to Multiply routine.
- * This function is useful while using the models that are stored in a CPU-independent
- * format on the disk.
- */
-void Int8PrepareBTransposed(const float* B_input, QuantizedBuffer& output, Index inner, Index B_untransposed_cols);
 
 /* Prepare B in a CPU-dependent format from an already quantized, transposed (routine not provided)
  * and CPU-independent format of B. The prepared B will be used as an input to Multiply routine.
@@ -36,18 +30,22 @@ void Int8PrepareBTransposed(const float* B_input, QuantizedBuffer& output, Index
  */
 void Int8PrepareBQuantizedTransposed(const QuantizedBuffer& B_input, QuantizedBuffer& output, Index inner, Index B_untransposed_cols);
 
+
 /* Select columns from a prepared B matrix. The number of selected columns must be a multiple of 8.
  */
 void Int8SelectColumnsB(const QuantizedBuffer& B_input, QuantizedBuffer& output, Index rows, const Index *cols_begin, const Index *cols_end);
+
 
 /* Prepare A for the Multiply routine that performs unsigned * signed multiplication. It performs quantization
  * on floating values and adds 127 to each number to make sure that all numbers are positive.
  */
 void Int8ShiftPrepareA(const float* A_input, QuantizedBuffer& output, Index rows, Index cols);
 
+
 /* Prepares bias for the Multiply routine that performs unsigned * signed multiplication.
  */
 void Int8ShiftPrepareBias(const QuantizedBuffer& B_input, const float* bias_input, QuantizedBuffer& output, Index width, Index B_cols);
+
 
 /* A multiply routine to perform unsigned * signed multiplication.
  * It does C = A * B + Bias, presuming A, B and Bias are quantized inputs prepared using the
