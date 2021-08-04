@@ -33,7 +33,7 @@ void Int8PrepareBQuantizedTransposed(const QuantizedBuffer& B_input, QuantizedBu
 
 /* Select columns from a prepared B matrix. The number of selected columns must be a multiple of 8.
  */
-void Int8SelectColumnsB(const QuantizedBuffer& B_input, QuantizedBuffer& output, Index rows, const Index *cols_begin, const Index *cols_end);
+void Int8SelectColumnsB(const QuantizedBuffer& B_input, QuantizedBuffer& output, Index rows, const Index* cols_begin, const Index* cols_end);
 
 
 /* Prepare A for the Multiply routine that performs unsigned * signed multiplication. It performs quantization
