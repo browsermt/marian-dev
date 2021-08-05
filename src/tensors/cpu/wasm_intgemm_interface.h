@@ -57,11 +57,11 @@ void Int8ShiftPrepareBias(const int8_t* B_input,
                         const float* bias_input,
                         Index B_rows,
                         Index B_cols,
-                        int8_t* output);
+                        float* output);
 
 
 /* A multiply routine to perform unsigned * signed multiplication.
- * It does C = A * B + Bias, presuming A, B and Bias are quantized inputs prepared using the
+ * It does C = A * B + Bias, presuming A, B and Bias are inputs prepared using the
  * corresponding Prepare* functions.
  */
 void Int8ShiftMultiply(const int8_t* A_input,
@@ -70,7 +70,7 @@ void Int8ShiftMultiply(const int8_t* A_input,
                         const int8_t* B_input,
                         float scale_B,
                         int8_t zero_point_B,
-                        const int8_t* bias_input,
+                        const float* bias_input,
                         Index A_rows,
                         Index width,
                         Index B_cols,
