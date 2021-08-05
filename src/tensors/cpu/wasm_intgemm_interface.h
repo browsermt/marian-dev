@@ -25,10 +25,8 @@ using Index = unsigned int;
  *
  * @param[in]   B_input               An array representing the input 2-D matrix.
  *                                    Size of the array = `B_untransposed_cols` * `B_untransposed_rows`
- * @param[in]   B_untransposed_rows   No. of rows of the prepared B matrix (= no. of columns of input matrix).
- *                                    It should be a multiple of 64.
- * @param[in]   B_untransposed_cols   No. of columns of the prepared B matrix (= no. of rows of input matrix).
- *                                    It should be a multiple of 8.
+ * @param[in]   B_untransposed_rows   No. of rows of prepared B matrix. It should be a multiple of 64.
+ * @param[in]   B_untransposed_cols   No. of columns of prepared B matrix. It should be a multiple of 8.
  * @param[out]  output                An array representing the prepared B matrix in row-major format.
  *                                    Size of the array = `B_untransposed_rows` * `B_untransposed_cols`
  */
@@ -41,18 +39,18 @@ void Int8PrepareBQuantizedTransposed(const int8_t* B_input,
 /**
  * Select a subset of columns from a prepared B matrix.
  *
- * Indices of the columns to be selected are specified by array: [*cols, *(cols+1), ... , (cols+num_cols-1)]
+ * Indices of the columns to be selected are specified by an array.
  *
- * @param[in]   B_input          An array representing the input 2-D matrix in row-major format.
- *                               Size of the array = `B_rows` * `B_cols`
- * @param[in]   B_rows           No. of rows of input matrix. It should be a multiple of 64.
- * @param[in]   B_cols           No. of columns of input matrix. It should be a multiple of 8.
- * @param[in]   cols             An array of column indices that should be selected from the input matrix.
- *                               All indices of the array should be valid. i.e.
- *                               i.e. 0 <= cols[N] < B_cols   where N = 0, 1, 2 .... (`num_cols`-1)
- * @param[in]   num_cols         Size of the `cols` array. It should be a multiple of 8.
- * @param[out]  output           An array representing the selected columns of input matrix.
- *                               Size of the array = `B_rows` * `num_cols`s
+ * @param[in]   B_input        An array representing the input 2-D matrix in row-major format.
+ *                             Size of the array = `B_rows` * `B_cols`
+ * @param[in]   B_rows         No. of rows of input matrix. It should be a multiple of 64.
+ * @param[in]   B_cols         No. of columns of input matrix. It should be a multiple of 8.
+ * @param[in]   cols           An array of column indices to be selected from input matrix.
+ *                             All indices of the array should be valid. i.e.
+ *                             i.e. 0 <= cols[N] < B_cols   where N = 0, 1, 2 .... (`num_cols`-1)
+ * @param[in]   num_cols       Size of the `cols` array. It should be a multiple of 8.
+ * @param[out]  output         An array representing the selected columns of input matrix.
+ *                             Size of the array = `B_rows` * `num_cols`s
  */
 void Int8SelectColumnsB(const int8_t* B_input,
                         Index B_rows,
