@@ -1,6 +1,6 @@
 #pragma once
 
-/* Main interface for integer matrix multiplication (C = A * B) for wasm.
+/* Main interface for integer matrix multiplication (C = A * B + Bias) for wasm.
  *
  * A is typically activations whose rows should be a multiple of 1 (i.e. no restriction) and
  * columns should be a multiple of 64.
@@ -8,7 +8,7 @@
  * B is typically fixed model parameters whose rows should be a multiple of 64 and columns
  * should be a multiple of 8.
  * 
- * C is row major.
+ * All matrices A, B and C are in row-major format.
  */
 
 #include <cstdint>
@@ -16,10 +16,21 @@
 using Index = unsigned int;
 
 
-/* Prepare B in a CPU-dependent format from an already quantized, transposed (routine not provided)
- * and CPU-independent format of B. The prepared B will be used as an input to Multiply routine.
- * This function is useful while using the quantized models that are stored in a CPU-independent
- * format on the disk.
+/**
+ * Prepare B for the Matrix Multiply routine.
+ *
+ * B is prepared in a CPU-dependent format from an already quantized, transposed and a CPU-independent
+ * format of B. This function is useful while using the quantized models that are stored in a
+ * CPU-independent format on the disk.
+ *
+ * @param[in]   B_input               An array representing the input 2-D matrix.
+ *                                    Size of the array = `B_untransposed_cols` * `B_untransposed_rows`
+ * @param[in]   B_untransposed_rows   No. of rows of the prepared B matrix (= no. of columns of input matrix).
+ *                                    It should be a multiple of 64.
+ * @param[in]   B_untransposed_cols   No. of columns of the prepared B matrix (= no. of rows of input matrix).
+ *                                    It should be a multiple of 8.
+ * @param[out]  output                An array representing the prepared B matrix in row-major format.
+ *                                    Size of the array = `B_untransposed_rows` * `B_untransposed_cols`
  */
 void Int8PrepareBQuantizedTransposed(const int8_t* B_input,
                                     Index B_untransposed_rows,
@@ -27,19 +38,43 @@ void Int8PrepareBQuantizedTransposed(const int8_t* B_input,
                                     int8_t* output);
 
 
-/* Select columns from a prepared B matrix. The number of selected columns must be a multiple of 8.
+/**
+ * Select a subset of columns from a prepared B matrix.
+ *
+ * Indices of the columns to be selected are specified by array: [*cols, *(cols+1), ... , (cols+num_cols-1)]
+ *
+ * @param[in]   B_input          An array representing the input 2-D matrix in row-major format.
+ *                               Size of the array = `B_rows` * `B_cols`
+ * @param[in]   B_rows           No. of rows of input matrix. It should be a multiple of 64.
+ * @param[in]   B_cols           No. of columns of input matrix. It should be a multiple of 8.
+ * @param[in]   cols             An array of column indices that should be selected from the input matrix.
+ *                               All indices of the array should be valid. i.e.
+ *                               i.e. 0 <= cols[N] < B_cols   where N = 0, 1, 2 .... (`num_cols`-1)
+ * @param[in]   num_cols         Size of the `cols` array. It should be a multiple of 8.
+ * @param[out]  output           An array representing the selected columns of input matrix.
+ *                               Size of the array = `B_rows` * `num_cols`s
  */
 void Int8SelectColumnsB(const int8_t* B_input,
                         Index B_rows,
-                        Index B_cols,             // We need this for bound checking for B buffer?
-                        const Index* cols_begin,  // Shouldn't cols_begin be just Index and not Index*?
-                        const Index* cols_end,    // Shouldn't cols_end be just Index and not Index*?
+                        Index B_cols,
+                        const Index* cols,
+                        const Index num_cols,
                         int8_t* output);
 
 
-/* Prepare A for the Multiply routine that performs unsigned * signed multiplication. It performs
- * quantization on floating values and adds 127 to each number to make sure that all numbers are
- * positive.
+/**
+ * Prepare A for the Matrix Multiply routine.
+ *
+ * It performs quantization on floating values.
+ *
+ * @param[in]   A_input     An array representing the input 2-D matrix in row-major format.
+ *                          Size of the array = `A_rows` * `A_cols`
+ * @param[in]   scale       The scaling factor (for quantization)
+ * @param[in]   zero_point  The zero point (for quantization)
+ * @param[in]   A_rows      No. of rows of input matrix. No restriction on its size.
+ * @param[in]   A_cols      No. of columns of input matrix. It should be a multiple of 64.
+ * @param[out]  output      An array representing the prepared A matrix in row-major format having
+ *                          the same size as of the input matrix i.e. `A_rows` * `A_cols`
  */
 void Int8ShiftPrepareA(const float* A_input,
                         float scale,
@@ -49,20 +84,47 @@ void Int8ShiftPrepareA(const float* A_input,
                         int8_t* output);
 
 
-/* Prepares bias for the Multiply routine that performs unsigned * signed multiplication.
+/**
+ * Prepares bias for the Matrix Multiply routine.
+ *
+ * @param[in]   B_input      An array representing the input 2-D matrix in row-major format from
+ *                           which bias will be prepared. Size of the array = `B_rows` * `B_cols`
+ * @param[in]   scale        The scaling factor (for quantization)
+ * @param[in]   zero_point   The zero point (for quantization)
+ * @param[in]   B_rows       No. of rows of input matrix. It should be a multiple of 64.
+ * @param[in]   B_cols       No. of columns of input matrix. It should be a multiple of 8.
+ * @param[in]   bias_input   An array representing the input bias having size = 1 * `B_cols`
+ * @param[out]  output       An array representing the prepared bias having size = 1 * `B_cols`
  */
 void Int8ShiftPrepareBias(const int8_t* B_input,
                         float scale,
                         int8_t zero_point,
-                        const float* bias_input,
                         Index B_rows,
                         Index B_cols,
+                        const float* bias_input,
                         float* output);
 
 
-/* A multiply routine to perform unsigned * signed multiplication.
+/**
+ * A multiply routine to perform multiplication of 2 matrices.
+ *
  * It does C = A * B + Bias, presuming A, B and Bias are inputs prepared using the
  * corresponding Prepare* functions.
+ *
+ * @param[in]   A_input       An array representing the input 2-D matrix A in row-major format.
+ *                            Size of the array = `A_rows` * `width`
+ * @param[in]   A_scale       The scaling factor (for quantization) of A
+ * @param[in]   A_zero_point  The zero point (for quantization) of A
+ * @param[in]   B_input       An array representing the input 2-D matrix B in row-major format.
+ *                            Size of the array = `width` * `B_cols`
+ * @param[in]   B_scale       The scaling factor (for quantization) of B
+ * @param[in]   B_zero_point  The zero point (for quantization) of B
+ * @param[in]   A_rows        No. of rows of input matrix A. No restriction on its size.
+ * @param[in]   width         No. of columns of input matrix A (= no. of rows of input matrix B).
+ *                            It should be a multiple of 64.
+ * @param[in]   B_cols        No. of columns of input matrix B. It should be a multiple of 8.
+ * @param[out]  output        An array representing the multiplication result of input matrix A and B
+ *                            in row-major format. Size of the array = `A_rows` * `B_cols`
  */
 void Int8ShiftMultiply(const int8_t* A_input,
                         float scale_A,
