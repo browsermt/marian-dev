@@ -18,7 +18,7 @@ using Index = unsigned int;
 /**
  * Prepare B for the Matrix Multiply routine.
  *
- * B is prepared in a CPU-dependent format. It also performs quantization on floating values.
+ * B is prepared in a CPU-dependent format by performing quantization on floating values.
  *
  * @param[in]   B_input     An array representing the input 2-D matrix in row-major format.
  *                          Size of the array = `B_rows` * `B_cols`
@@ -38,11 +38,11 @@ void Int8PrepareB(const float* B_input,
 
 
 /**
- * Prepare B for the Matrix Multiply routine.
+ * Prepare B for the Matrix Multiply routine from an already quantized, transposed and a CPU-independent
+ * format of B.
  *
- * B is prepared in a CPU-dependent format from an already quantized, transposed and a CPU-independent
- * format of B. This function is useful while using the quantized models that are stored in a
- * CPU-independent format on the disk.
+ * B is prepared in a CPU-dependent format. This function is useful while using the quantized models
+ * that are stored in a CPU-independent format on the disk.
  *
  * @param[in]   B_input               An array representing the input 2-D matrix.
  *                                    Size of the array = `B_untransposed_cols` * `B_untransposed_rows`
@@ -130,14 +130,15 @@ void Int8PrepareBias(const int8_t* B_input,
  * It does C = A * B + Bias, presuming A, B and Bias are inputs prepared using the
  * corresponding Prepare* functions.
  *
- * @param[in]   A_input       An array representing the input 2-D matrix A in row-major format.
+ * @param[in]   A_input       An array representing the prepared input 2-D matrix A in row-major format.
  *                            Size of the array = `A_rows` * `width`
  * @param[in]   A_scale       The scaling factor (for quantization) of A
  * @param[in]   A_zero_point  The zero point (for quantization) of A
- * @param[in]   B_input       An array representing the input 2-D matrix B in row-major format.
+ * @param[in]   B_input       An array representing the prepared input 2-D matrix B in row-major format.
  *                            Size of the array = `width` * `B_cols`
  * @param[in]   B_scale       The scaling factor (for quantization) of B
  * @param[in]   B_zero_point  The zero point (for quantization) of B
+ * @param[in]   bias_input    An array representing the prepared input bias having size = 1 * `B_cols`
  * @param[in]   A_rows        No. of rows of input matrix A. No restriction on its size.
  * @param[in]   width         No. of columns of input matrix A (= no. of rows of input matrix B).
  *                            It should be a multiple of 64.
@@ -146,11 +147,11 @@ void Int8PrepareBias(const int8_t* B_input,
  *                            in row-major format. Size of the array = `A_rows` * `B_cols`
  */
 void Int8ShiftMultiply(const int8_t* A_input,
-                        float scale_A,
-                        int8_t zero_point_A,
+                        float A_scale,
+                        int8_t A_zero_point,
                         const int8_t* B_input,
-                        float scale_B,
-                        int8_t zero_point_B,
+                        float B_scale,
+                        int8_t B_zero_point,
                         const float* bias_input,
                         Index A_rows,
                         Index width,
