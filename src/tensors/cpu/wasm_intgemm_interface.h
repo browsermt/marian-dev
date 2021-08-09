@@ -15,6 +15,27 @@
 
 using Index = unsigned int;
 
+/**
+ * Prepare B for the Matrix Multiply routine.
+ *
+ * B is prepared in a CPU-dependent format. It also performs quantization on floating values.
+ *
+ * @param[in]   B_input     An array representing the input 2-D matrix in row-major format.
+ *                          Size of the array = `B_rows` * `B_cols`
+ * @param[in]   scale       The scaling factor (for quantization)
+ * @param[in]   zero_point  The zero point (for quantization)
+ * @param[in]   B_rows      No. of rows of input matrix. It should be a multiple of 64.
+ * @param[in]   B_cols      No. of columns of input matrix. It should be a multiple of 8.
+ * @param[out]  output      An array representing the prepared B matrix in row-major format having
+ *                          the same size as of the input matrix i.e. `B_rows` * `B_cols`
+ */
+void Int8PrepareB(const float* B_input,
+                float scale,
+                int8_t zero_point,
+                Index B_rows,
+                Index B_cols,
+                int8_t* output);
+
 
 /**
  * Prepare B for the Matrix Multiply routine.
@@ -74,12 +95,12 @@ void Int8SelectColumnsB(const int8_t* B_input,
  * @param[out]  output      An array representing the prepared A matrix in row-major format having
  *                          the same size as of the input matrix i.e. `A_rows` * `A_cols`
  */
-void Int8ShiftPrepareA(const float* A_input,
-                        float scale,
-                        int8_t zero_point,
-                        Index A_rows,
-                        Index A_cols,
-                        int8_t* output);
+void Int8PrepareA(const float* A_input,
+                float scale,
+                int8_t zero_point,
+                Index A_rows,
+                Index A_cols,
+                int8_t* output);
 
 
 /**
@@ -94,13 +115,13 @@ void Int8ShiftPrepareA(const float* A_input,
  * @param[in]   bias_input   An array representing the input bias having size = 1 * `B_cols`
  * @param[out]  output       An array representing the prepared bias having size = 1 * `B_cols`
  */
-void Int8ShiftPrepareBias(const int8_t* B_input,
-                        float scale,
-                        int8_t zero_point,
-                        Index B_rows,
-                        Index B_cols,
-                        const float* bias_input,
-                        float* output);
+void Int8PrepareBias(const int8_t* B_input,
+                    float scale,
+                    int8_t zero_point,
+                    Index B_rows,
+                    Index B_cols,
+                    const float* bias_input,
+                    float* output);
 
 
 /**
