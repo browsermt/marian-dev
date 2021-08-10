@@ -9,6 +9,9 @@
  * should be a multiple of 8.
  * 
  * All matrices A, B and C are in row-major format.
+ *
+ * Please note that most of the functions in this interface might have architecture specific
+ * implementations.
  */
 
 #include <cstdint>
@@ -19,6 +22,7 @@ using Index = unsigned int;
  * Prepare B for the Matrix Multiply routine.
  *
  * B is prepared in a CPU-dependent format by performing quantization on floating values.
+ * Please note that this interface might have architecture specific implementations.
  *
  * @param[in]   input_B                An array representing the input 2-D matrix.
  *                                     Size of the array = `output_rows` * `output_cols`.
@@ -76,6 +80,7 @@ void Int8PrepareBQuantizedTransposed(const int8_t* input_B,
  * Prepare A for the Matrix Multiply routine.
  *
  * It performs quantization on floating values.
+ * Please note that this interface might have architecture specific implementations.
  *
  * @param[in]   input_A        An array representing the input 2-D matrix in row-major format.
  *                             Size of the array = `output_rows` * `output_cols`.
@@ -126,7 +131,10 @@ void Int8PrepareBias(const int8_t* input_B,
  * A multiply routine to perform multiplication of 2 matrices.
  *
  * It does output = A * B + Bias
- * Please note that inputs A, B and Bias must be prepared using the corresponding Prepare* functions.
+ * Please note that:
+ * 1. This interface might have architecture specific implementation.
+ * 2. Inputs A, B and Bias must be prepared using the corresponding implementations
+ *    of Prepare* functions for that architecture.
  *
  * @param[in]   input_A       An array representing prepared A (input) 2-D matrix in row-major format.
  *                            Size of the array = `rows_A` * `width`.
