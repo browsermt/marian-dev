@@ -1,6 +1,6 @@
 #pragma once
 
-/* Main interface for integer matrix multiplication (C = A * B + Bias) for wasm.
+/* Main interface for integer matrix multiplication (C = A * B) for wasm.
  *
  * A is typically activations whose rows should be a multiple of 1 (i.e. no restriction) and
  * columns should be a multiple of 64.
@@ -125,13 +125,17 @@ void Int8PrepareBias(const int8_t* input_B,
                      float* output);
 
 /**
- * A multiply routine to perform multiplication of 2 matrices.
+ * Perform multiplication of 2 matrices followed by adding a bias.
  *
- * It does output = A * B + Bias
+ * i.e Output = A * B + Bias
+ *
  * Please note that:
  * 1. This interface might have architecture specific implementation.
  * 2. Inputs A, B and Bias must be prepared using the corresponding implementations
  *    of Prepare* functions for that architecture.
+ *
+ * This routine can be used to support multiplication of 2 matrics on the architectures that
+ * don't provide a signed * signed multiplication instruction natively (e.g. Intel SSSE3).
  *
  * @param[in]   input_A       An array representing prepared A (input) 2-D matrix in row-major
  *                            format. Size of the array = `rows_A` * `width`.
@@ -152,17 +156,17 @@ void Int8PrepareBias(const int8_t* input_B,
  * @param[out]  output        An array representing the multiplication result in row-major format.
  *                            Size of the array = `rows_A` * `cols_B`
  */
-void Int8Multiply(const int8_t* input_A,
-                  float scale_A,
-                  int8_t zero_point_A,
-                  const int8_t* input_B,
-                  float scale_B,
-                  int8_t zero_point_B,
-                  const float* bias_input,
-                  Index rows_A,
-                  Index width,
-                  Index cols_B,
-                  float* output);
+void Int8MultiplyAndAddBias(const int8_t* input_A,
+                            float scale_A,
+                            int8_t zero_point_A,
+                            const int8_t* input_B,
+                            float scale_B,
+                            int8_t zero_point_B,
+                            const float* bias_input,
+                            Index rows_A,
+                            Index width,
+                            Index cols_B,
+                            float* output);
 
 /**
  * Select a subset of columns from a prepared B matrix.
