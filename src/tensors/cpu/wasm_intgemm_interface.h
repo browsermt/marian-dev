@@ -129,13 +129,14 @@ void int8PrepareBias(const int8_t* input_B,
  *
  * i.e Output = A * B + Bias
  *
+ * This routine can be used to support multiplication of 2 matrics on the architectures that
+ * don't have a native (signed * signed) multiplication instruction but have a native
+ * (usigned * signed) multiplication instruction (e.g. Intel SSSE3, AVX2).
+ *
  * Please note that:
  * 1. This interface might have architecture specific implementation.
  * 2. Inputs A, B and Bias must be prepared using the corresponding implementations
- *    of Prepare* functions for that architecture.
- *
- * This routine can be used to support multiplication of 2 matrics on the architectures that
- * don't provide a signed * signed multiplication instruction natively (e.g. Intel SSSE3).
+ *    of int8Prepare* functions for that architecture.
  *
  * @param[in]   input_A       An array representing prepared A (input) 2-D matrix in row-major
  *                            format. Size of the array = `rows_A` * `width`.
