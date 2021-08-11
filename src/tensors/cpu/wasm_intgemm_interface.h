@@ -43,7 +43,7 @@ using Index = unsigned int;
  *                                     format. Size of the array = `output_rows` * `output_cols`.
  *                                     Shape of the matrix: (`output_rows`, `output_cols`)
  */
-void Int8PrepareB(const float* input_B,
+void int8PrepareB(const float* input_B,
                   float scale,
                   int8_t zero_point,
                   bool is_input_transposed,
@@ -69,7 +69,7 @@ void Int8PrepareB(const float* input_B,
  *                              Size of the array = `output_rows` * `output_cols`.
  *                              Shape of the matrix: (`output_rows`, `output_cols`)
  */
-void Int8PrepareBQuantizedTransposed(const int8_t* input_B,
+void int8PrepareBQuantizedTransposed(const int8_t* input_B,
                                      Index output_rows,
                                      Index output_cols,
                                      int8_t* output);
@@ -93,7 +93,7 @@ void Int8PrepareBQuantizedTransposed(const int8_t* input_B,
  *                             Size of the array = `output_rows` * `output_cols`.
  *                             Shape of the matrix: (`output_rows`, `output_cols`)
  */
-void Int8PrepareA(const float* input_A,
+void int8PrepareA(const float* input_A,
                   float scale,
                   int8_t zero_point,
                   Index output_rows,
@@ -116,7 +116,7 @@ void Int8PrepareA(const float* input_A,
  * @param[out]  output       An array representing the final prepared bias.
  *                           Size of the array = 1 * `cols_B`
  */
-void Int8PrepareBias(const int8_t* input_B,
+void int8PrepareBias(const int8_t* input_B,
                      float scale,
                      int8_t zero_point,
                      Index rows_B,
@@ -156,7 +156,7 @@ void Int8PrepareBias(const int8_t* input_B,
  * @param[out]  output        An array representing the multiplication result in row-major format.
  *                            Size of the array = `rows_A` * `cols_B`
  */
-void Int8MultiplyAndAddBias(const int8_t* input_A,
+void int8MultiplyAndAddBias(const int8_t* input_A,
                             float scale_A,
                             int8_t zero_point_A,
                             const int8_t* input_B,
@@ -186,7 +186,7 @@ void Int8MultiplyAndAddBias(const int8_t* input_A,
  *                             Size of the array = `rows_B` * `num_cols`.
  *                             Shape of the matrix: (`rows_B`, `num_cols`)
  */
-void Int8SelectColumnsOfB(const int8_t* input_B,
+void int8SelectColumnsOfB(const int8_t* input_B,
                           Index rows_B,
                           Index cols_B,
                           const Index* cols,
