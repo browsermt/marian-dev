@@ -1,6 +1,8 @@
 #pragma once
 
-/* Main interface for integer matrix multiplication (C = A * B) for wasm.
+/** Main interface for integer matrix multiplication followed by addition of bias for wasm.
+ *
+ * C = A * B + Bias
  *
  * A is typically activations whose rows should be a multiple of 1 (i.e. no restriction) and
  * columns should be a multiple of 64.
@@ -128,10 +130,6 @@ void int8PrepareBias(const int8_t* input_B,
  * Perform multiplication of 2 matrices followed by adding a bias.
  *
  * i.e Output = A * B + Bias
- *
- * This routine can be used to support multiplication of 2 matrics on the architectures that
- * don't have a native (signed * signed) multiplication instruction but have a native
- * (usigned * signed) multiplication instruction (e.g. Intel SSSE3, AVX2).
  *
  * Please note that:
  * 1. This interface might have architecture specific implementation.
