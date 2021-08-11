@@ -18,7 +18,7 @@
 
 #include <cstdint>
 
-using Index = unsigned int;
+using Index = uint32_t;
 
 /**
  * Prepare B for the Matrix Multiply routine.
