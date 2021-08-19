@@ -58,6 +58,7 @@ endif()
 
 if (COMPILE_WASM)
   add_compile_definitions(WASM)
+  add_compile_definitions(USE_WASM_INT8GEMM)
   set(WORMHOLE ON CACHE BOOL "Use WASM wormhole in intgemm https://bugzilla.mozilla.org/show_bug.cgi?id=1672160")
 endif()
 
