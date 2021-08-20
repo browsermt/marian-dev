@@ -4,13 +4,14 @@
  *
  * C = A * B + Bias
  *
- * A is typically activations whose rows should be a multiple of 1 (i.e. no restriction) and
+ * Input matrix A is typically activations whose rows should be a multiple of 1 (i.e. no restriction) and
  * columns should be a multiple of 64.
  *
- * B is typically fixed model parameters whose rows should be a multiple of 64 and columns
+ * Input matrix B is typically fixed model parameters whose rows should be a multiple of 64 and columns
  * should be a multiple of 8.
  *
- * All matrices A, B and C are in row-major format.
+ * The input matrices A, B and the output matrix C are represented as arrays (contiguous memory locations)
+ * in row-major format. Bias is also passed as array (contiguous memory locations).
  *
  * Please note that most of the functions in this interface might have architecture specific
  * implementations.
@@ -36,21 +37,20 @@ using Index = uint32_t;
  *                                     Shape of the matrix: (`output_rows`, `output_cols`)
  * @param[in]   scale                  The scaling factor (for quantization)
  * @param[in]   zero_point             The zero point (for quantization)
- * @param[in]   is_input_transposed    Whether the input matrix is in transposed form or not.
  * @param[in]   output_rows            No. of rows of output (prepared B) matrix.
  *                                     It should be a multiple of 64.
  * @param[in]   output_cols            No. of columns of output (prepared B) matrix.
  *                                     It should be a multiple of 8.
- * @param[out]  output                 An array representing the prepared B matrix in row-major
- *                                     format. Size of the array = `output_rows` * `output_cols`.
- *                                     Shape of the matrix: (`output_rows`, `output_cols`)
+ * @param[in]   is_input_transposed    Whether the input matrix is in transposed form or not.
+ * @param[out]  output                 An array representing the prepared B matrix.
+ *                                     Size of the array = `output_rows` * `output_cols`.
  */
 void int8PrepareB(const float* input_B,
                   float scale,
                   float zero_point,
-                  bool is_input_transposed,
                   Index output_rows,
                   Index output_cols,
+                  bool is_input_transposed,
                   int8_t* output);
 
 /**
@@ -67,9 +67,8 @@ void int8PrepareB(const float* input_B,
  *                              It should be a multiple of 64.
  * @param[in]   output_cols     No. of columns of output (prepared B) matrix.
  *                              It should be a multiple of 8.
- * @param[out]  output          An array representing the prepared B matrix in row-major format.
+ * @param[out]  output          An array representing the prepared B matrix.
  *                              Size of the array = `output_rows` * `output_cols`.
- *                              Shape of the matrix: (`output_rows`, `output_cols`)
  */
 void int8PrepareBQuantizedTransposed(const int8_t* input_B,
                                      Index output_rows,
@@ -107,9 +106,8 @@ void int8PrepareA(const float* input_A,
  *
  * It uses the prepared B and a bias input to prepare the final bias.
  *
- * @param[in]   input_B      An array representing the prepared B (input) 2-D matrix in row-major
- *                           format. Size of the array = `rows_B` * `cols_B`.
- *                           Shape of the matrix: (`rows_B`, `cols_B`)
+ * @param[in]   input_B      An array representing the prepared B matrix.
+ *                           Size of the array = `rows_B` * `cols_B`.
  * @param[in]   scale        The scaling factor (for quantization)
  * @param[in]   zero_point   The zero point (for quantization)
  * @param[in]   rows_B       No. of rows of the prepared B matrix. It should be a multiple of 64.
@@ -134,16 +132,15 @@ void int8PrepareBias(const int8_t* input_B,
  * Please note that:
  * 1. This interface might have architecture specific implementation.
  * 2. Inputs A, B and Bias must be prepared using the corresponding implementations
- *    of int8Prepare* functions for that architecture.
+ *    of `int8Prepare*` functions for that architecture.
  *
  * @param[in]   input_A       An array representing prepared A (input) 2-D matrix in row-major
  *                            format. Size of the array = `rows_A` * `width`.
  *                            Shape of the matrix: (`rows_A`, `width`)
  * @param[in]   scale_A       The scaling factor (for quantization) of A
  * @param[in]   zero_point_A  The zero point (for quantization) of A
- * @param[in]   input_B       An array representing prepared B (input) 2-D matrix in row-major
- *                            format. Size of the array = `width` * `cols_B`.
- *                            Shape of the matrix: (`width`, `cols_B`)
+ * @param[in]   input_B       An array representing prepared B matrix.
+ *                            Size of the array = `width` * `cols_B`.
  * @param[in]   scale_B       The scaling factor (for quantization) of B
  * @param[in]   zero_point_B  The zero point (for quantization) of B
  * @param[in]   input_bias    An array representing the prepared bias.
@@ -172,9 +169,8 @@ void int8MultiplyAndAddBias(const int8_t* input_A,
  *
  * Indices of the columns to be selected are specified by an array.
  *
- * @param[in]   input_B        An array representing the prepared B (input) 2-D matrix in row-major
- *                             format. Size of the array = `rows_B` * `cols_B`.
- *                             Shape of the matrix: (`rows_B`, `cols_B`)
+ * @param[in]   input_B        An array representing the prepared B matrix.
+ *                             Size of the array = `rows_B` * `cols_B`.
  * @param[in]   rows_B         No. of rows of input matrix. It should be a multiple of 64.
  * @param[in]   cols_B         No. of columns of input matrix. It should be a multiple of 8.
  * @param[in]   cols           An array of column indices to be selected from input matrix.
