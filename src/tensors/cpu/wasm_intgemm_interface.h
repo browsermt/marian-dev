@@ -82,53 +82,54 @@ void int8PrepareB(const float* input_B,
  *
  * Please note that this interface might have architecture specific implementation.
  *
- * @param[in]   input_B_transposed     An array representing the transposed version of Input matrix B.
+ * @param[in]   input_B_transposed     An array representing transposed version of Input matrix B.
  *                                     It is in column-major format.
  *                                     Size of the array = `width` * `cols_B`.
  *                                     Shape of the matrix: (`cols_B`, `width`)
  * @param[in]   scale                  The scaling factor (for quantization)
  * @param[in]   zero_point             The zero point (for quantization)
  * @param[in]   width                  No. of rows of Input matrix B. It should be a multiple of 64.
- * @param[in]   cols_B                 No. of columns of Input matrix B. It should be a multiple of 8.
+ * @param[in]   cols_B                 No. of columns of Input matrix B. Should be a multiple of 8.
  * @param[out]  output                 An array representing the prepared B matrix.
  *                                     Size of the array = `width` * `cols_B`.
  */
 void int8PrepareBFromTransposed(const float* input_B_transposed,
-                  float scale,
-                  float zero_point,
-                  Index width,
-                  Index cols_B,
-                  int8_t* output);
+                                float scale,
+                                float zero_point,
+                                Index width,
+                                Index cols_B,
+                                int8_t* output);
 
 /**
- * Prepare B for the Matrix Multiply function from a quantized and transposed version of Input matrix B
- * which is also in a CPU-independent format.
+ * Prepare B for the Matrix Multiply function from a quantized and transposed version of Input
+ * matrix B which is also in a CPU-independent format.
  *
  * The final prepared B is in CPU-dependent format and can be used as an input to matrix multiply
  * function (`int8MultiplyAndAddBias`).
  *
- * This function is useful while using the quantized models that are stored in a CPU-independent format
- * on the disk.
+ * This function is useful while using the quantized models that are stored in a CPU-independent
+ * format on the disk.
  *
- * @param[in]   input_B_quant_transposed   An array representing the quantized and transposed version of
- *                                         Input matrix B. It is in column-major format.
+ * @param[in]   input_B_quant_transposed   An array representing the quantized and transposed
+ *                                         version of Input matrix B. It is in column-major format.
  *                                         Size of the array = `width` * `cols_B`.
  *                                         Shape of the matrix: (`cols_B`, `width`)
- * @param[in]   width                      No. of rows of Input matrix B. It should be a multiple of 64.
- * @param[in]   cols_B                     No. of columns of Input matrix B. Should be a multiple of 8.
+ * @param[in]   width                      No. of rows of Input matrix B. Should be multiple of 64
+ * @param[in]   cols_B                     No. of columns of Input matrix B. Should be multiple of 8
  * @param[out]  output                     An array representing the prepared B matrix.
  *                                         Size of the array = `width` * `cols_B`.
  */
 void int8PrepareBFromQuantizedTransposed(const int8_t* input_B_quant_transposed,
-                                     Index width,
-                                     Index cols_B,
-                                     int8_t* output);
+                                         Index width,
+                                         Index cols_B,
+                                         int8_t* output);
 
 /**
  * Prepare A for the Matrix Multiply function from Input matrix A.
  *
  * It performs quantization on floating values of input.
- * The final prepared A can be used as an input to matrix multiply function (`int8MultiplyAndAddBias`).
+ * The final prepared A can be used as an input to matrix multiply function
+ * (`int8MultiplyAndAddBias`).
  *
  * Please note that this interface might have architecture specific implementation.
  *
@@ -161,11 +162,11 @@ void int8PrepareA(const float* input_A,
  *                                  Size of the array = `width` * `cols_B`.
  * @param[in]   scale               The scaling factor (for quantization)
  * @param[in]   zero_point          The zero point (for quantization)
- * @param[in]   width               No. of rows of Input matrix B (i.e. unquantized & untransposed form)
+ * @param[in]   width               No. of rows of Input matrix B (unquantized & non-transposed).
  *                                  It should be a multiple of 64.
- * @param[in]   cols_B              No. of columns of Input matrix B (i.e. unquantized & untransposed form)
+ * @param[in]   cols_B              No. of columns of Input matrix B (unquantized & non-transposed)
  *                                  It should be a multiple of 8.
- * @param[in]   input_bias          An array representing the input bias. Size of the array = `cols_B`
+ * @param[in]   input_bias          An array representing the input bias. Size of array = `cols_B`
  * @param[out]  output              An array representing the final prepared bias.
  *                                  Size of the array = `cols_B`
  */
@@ -183,8 +184,8 @@ void int8PrepareBias(const int8_t* input_B_prepared,
  * i.e Output = A_prepared * B_prepared + Bias_prepared
  *
  * The inputs A_prepared, B_prepared and Bias_prepared of this function must be
- * obtained by using `int8PrepareA`, one of the int8PrepareB* and `int8PrepareBias`
- * functions respectively.s
+ * obtained by using `int8PrepareA`, one of the `int8PrepareB*` and `int8PrepareBias`
+ * functions respectively.
  *
  * Please note that this interface might have architecture specific implementation.
  *
@@ -194,8 +195,8 @@ void int8PrepareBias(const int8_t* input_B_prepared,
  * @param[in]   scale_A                The scaling factor (for quantization) of A
  * @param[in]   zero_point_A           The zero point (for quantization) of A
  * @param[in]   input_B_prepared       An array representing the prepared B matrix.
- *                                     This must be obtained by using one of `int8PrepareB*` functions.
- *                                     Size of the array = `width` * `cols_B`.
+ *                                     This must be obtained by using one of `int8PrepareB*`
+ *                                     functions. Size of the array = `width` * `cols_B`.
  * @param[in]   scale_B                The scaling factor (for quantization) of B
  * @param[in]   zero_point_B           The zero point (for quantization) of B
  * @param[in]   input_bias_prepared    An array representing the prepared bias.
@@ -204,7 +205,7 @@ void int8PrepareBias(const int8_t* input_B_prepared,
  * @param[in]   rows_A                 No. of rows of Input matrix A. No restriction on its size.
  * @param[in]   width                  No. of columns of Input matrix A (same as no. of columns of
  *                                     Input matrix B). It should be a multiple of 64.
- * @param[in]   cols_B                 No. of columns of Input matrix B. It should be a multiple of 8.
+ * @param[in]   cols_B                 No. of columns of Input matrix B. Should be a multiple of 8.
  * @param[out]  output                 An array representing the result matrix in row-major format.
  *                                     Size of the array = `rows_A` * `cols_B`.
  */
@@ -226,8 +227,8 @@ void int8MultiplyAndAddBias(const int8_t* input_A_prepared,
  * Indices of the columns to be selected are specified by an array.
  *
  * @param[in]   input_B_prepared   An array representing the prepared B matrix.
- *                                 This must be obtained by using one of the `int8PrepareB*` functions
- *                                 Size of the array = `width` * `cols_B`.
+ *                                 This must be obtained by using one of the `int8PrepareB*`
+ *                                 functions Size of the array = `width` * `cols_B`.
  * @param[in]   width              No. of rows of Input matrix B. It should be a multiple of 64.
  * @param[in]   cols_B             No. of columns of Input matrix B. It should be a multiple of 8.
  * @param[in]   cols               An array of column indices to be selected from prepared B.
