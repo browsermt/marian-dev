@@ -114,7 +114,7 @@ void int8PrepareA(const float* input_A,
  * @param[in]   zero_point   The zero point (for quantization)
  * @param[in]   rows_B       No. of rows of the prepared B matrix. It should be a multiple of 64.
  * @param[in]   cols_B       No. of columns of prepared B matrix. It should be a multiple of 8.
- * @param[in]   bias_input   An array representing the input bias. Size of the array = 1 * `cols_B`
+ * @param[in]   input_bias   An array representing the input bias. Size of the array = 1 * `cols_B`
  * @param[out]  output       An array representing the final prepared bias.
  *                           Size of the array = 1 * `cols_B`
  */
@@ -123,7 +123,7 @@ void int8PrepareBias(const int8_t* input_B,
                      float zero_point,
                      Index rows_B,
                      Index cols_B,
-                     const float* bias_input,
+                     const float* input_bias,
                      float* output);
 
 /**
@@ -146,7 +146,7 @@ void int8PrepareBias(const int8_t* input_B,
  *                            Shape of the matrix: (`width`, `cols_B`)
  * @param[in]   scale_B       The scaling factor (for quantization) of B
  * @param[in]   zero_point_B  The zero point (for quantization) of B
- * @param[in]   bias_input    An array representing the prepared bias.
+ * @param[in]   input_bias    An array representing the prepared bias.
  *                            Size of the array = 1 * `cols_B`
  * @param[in]   rows_A        No. of rows of prepared A matrix. No restriction on its size.
  * @param[in]   width         No. of columns of prepared A matrix (= no. of rows of prepared B
@@ -161,7 +161,7 @@ void int8MultiplyAndAddBias(const int8_t* input_A,
                             const int8_t* input_B,
                             float scale_B,
                             float zero_point_B,
-                            const float* bias_input,
+                            const float* input_bias,
                             Index rows_A,
                             Index width,
                             Index cols_B,
