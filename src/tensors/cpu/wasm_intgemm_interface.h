@@ -20,7 +20,7 @@
  *
  *   Please note that it is also possible to pass Input matrix B in 2 more forms:
  *    - One that is already a quantized and transposed version of Input matrix B
- *    - Other that is just a transposed version of Input matrix B
+ *    - Other that is already a transposed version of Input matrix B
  *
  * Input Bias:
  *   - is an array (contiguous memory locations) that represents bias
@@ -128,8 +128,10 @@ void int8PrepareBFromQuantizedTransposed(const int8_t* input_B_quant_transposed,
  * Prepare A for the Matrix Multiply function from Input matrix A.
  *
  * It performs quantization on floating values of input.
- * The final prepared A can be used as an input to matrix multiply function
- * (`int8MultiplyAndAddBias`).
+ * The final prepared A might be architecture dependent. e.g. On some architectures like x86, it might
+ * be unsigned (achieved by adding 127 to quantized values) while on others like Arm, it might be
+ * signed.
+ * The final prepared A can be used as an input to matrix multiply function (`int8MultiplyAndAddBias`).
  *
  * Please note that this interface might have architecture specific implementation.
  *
