@@ -5,7 +5,7 @@
 #include "tensors/cpu/aligned.h"
 #include "common/io_item.h"
 #include "3rd_party/intgemm/intgemm/intgemm.h"
-#if USE_WASM_INT8GEMM
+#if defined(WASM)
 #include "wasm_intgemm_interface.h"
 #endif
 

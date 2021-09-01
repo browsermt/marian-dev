@@ -208,7 +208,7 @@ public:
         }
         if (gemmElementType == Type::intgemm8) {
           float quantMult = 127.0f / intgemm::MaxAbsolute(val->data(), val->data() + val->shape().elements());
-          #if !defined(USE_WASM_INT8GEMM)
+          #if !defined(WASM)
           intgemm::Int8::PrepareA(tmp->data(), /*input*/
                                 paramMat->data<int8_t>(), /*output*/
                                 quantMult, /*Quant Mult*/
@@ -216,12 +216,12 @@ public:
                                 cols(val));
           #else
           ABORT("INT8::PREPARE_A not supported by WASM GEMM");
-          int8PrepareA(tmp->data(), /*input*/
-                      quantMult, /*Quant Mult*/
-                      0, /* zero point */
+          /*int8PrepareA(tmp->data(), //input
+                      quantMult, //Quant Mult
+                      0, // zero point
                       rows(val),
                       cols(val),
-                      paramMat->data<int8_t>() /*output*/);
+                      paramMat->data<int8_t>() /*output*/);*/
           #endif
           //Put the quantMult at the back of the tensor
           *(reinterpret_cast<float *>(paramMat->data<int8_t>() + val->shape().elements())) = quantMult;
