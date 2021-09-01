@@ -32,8 +32,8 @@ bool shifted_;
 #ifdef COMPILE_CPU
     return {NodeOp(
       quantMult_ = *child(1)->val()->data();
+    #if !defined(WASM)
       typedef typename intgemm_<vtype>::type Integer;
-    #if !defined(USE_WASM_INT8GEMM)
       if (!shifted_) {
         intgemm_<vtype>::width::PrepareA(child(0)->val()->data(), /*input*/
                                       val_->data<Integer>(), /*output*/
@@ -47,21 +47,22 @@ bool shifted_;
                                       rows(child(0)->val()),
                                       cols(child(0)->val()));
       }
-    #else //!USE_WASM_INT8GEMM
-      if (intgemm_<vtype>::intgemmType != Type::intgemm8) {
-        ABORT("INT16::PREPARE_A not supported by WASM GEMM");
-      }
+    #else
       if (!shifted_) {
-        ABORT("INT8::PREPARE_A not supported by WASM GEMM");
+        if (intgemm_<vtype>::intgemmType == Type::intgemm16) {
+          ABORT("INT16::PREPARE_A not supported by WASM GEMM");
+        } else {
+          ABORT("INT8::PREPARE_A not supported by WASM GEMM");
+        }
       } else {
         int8PrepareA(child(0)->val()->data(), /*input*/
                     *child(1)->val()->data(), /*Quant Mult*/
                     0, /* zero point */
                     rows(child(0)->val()),
                     cols(child(0)->val()),
-                    val_->data<int8_t>(), /*output*/);
+                    val_->data<int8_t>() /*output*/);
       }
-    #endif //!USE_WASM_INT8GEMM
+    #endif
     )};
 #else
     return {NodeOp()};
