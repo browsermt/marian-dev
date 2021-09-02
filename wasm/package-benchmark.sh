@@ -27,3 +27,8 @@ sed -i.bak 's/var result = WebAssembly.instantiateStreaming(response, info);/var
 sed -i.bak 's/return WebAssembly.instantiate(binary, info);/return WebAssembly.instantiate(binary, info, {simdWormhole:true});/g' marian-decoder.js
 sed -i.bak 's/var module = new WebAssembly.Module(bytes);/var module = new WebAssembly.Module(bytes, {simdWormhole:true});/g' marian-decoder.js
 echo "SUCCESS"
+
+echo "Import integer (8-bit) gemm from within the main module"
+#sed -i.bak 's/asmLibraryArg,/asmLibraryArg ,"wasm_gemm":{"mmul_int8_shifted": (...a) => Module.asm.mmul_int8_shifted_ext(...a),"mmul_int8": (...a) => Module.asm.mmul_int8_ext(...a),"prepare_a_int8": (...a) => Module.asm.prepare_a_int8_ext(...a),"prepare_a_int8_shifted": (...a) => Module.asm.prepare_a_int8_shifted_ext(...a),"prepare_b_int8": (...a) => Module.asm.prepare_b_int8_ext(...a), "prepare_bias_int8_shifted": (...a) => Module.asm.prepare_bias_int8_shifted_ext(...a), "prepare_qt_int8": (...a) => Module.asm.prepare_qt_int8_ext(...a), },/g' marian-decoder.js
+sed -i.bak 's/asmLibraryArg,/asmLibraryArg,"wasm_gemm":{"int8_prepare_a": (...a) => Module["asm"].int8_prepare_a_fallback(...a) },/g' marian-decoder.js
+echo "SUCCESS"
