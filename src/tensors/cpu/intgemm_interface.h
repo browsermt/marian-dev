@@ -32,8 +32,8 @@ bool shifted_;
 #ifdef COMPILE_CPU
     return {NodeOp(
       quantMult_ = *child(1)->val()->data();
-    #if !defined(WASM)
       typedef typename intgemm_<vtype>::type Integer;
+    #if !defined(WASM)
       if (!shifted_) {
         intgemm_<vtype>::width::PrepareA(child(0)->val()->data(), /*input*/
                                       val_->data<Integer>(), /*output*/
@@ -48,19 +48,21 @@ bool shifted_;
                                       cols(child(0)->val()));
       }
     #else
-      if (!shifted_) {
-        if (intgemm_<vtype>::intgemmType == Type::intgemm16) {
-          ABORT("INT16::PREPARE_A not supported by WASM GEMM");
-        } else {
-          ABORT("INT8::PREPARE_A not supported by WASM GEMM");
-        }
+      if (intgemm_<vtype>::intgemmType == Type::intgemm16) {
+        ABORT_IF(shifted_, "Shifted 16-bit PrepareA is not supported");
+        intgemm_<vtype>::width::PrepareA(child(0)->val()->data(), /*input*/
+                                    val_->data<Integer>(), /*output*/
+                                    *child(1)->val()->data(), /*Quant Mult*/
+                                    rows(child(0)->val()),
+                                    cols(child(0)->val()));
       } else {
-        int8PrepareA(child(0)->val()->data(), /*input*/
-                    *child(1)->val()->data(), /*Quant Mult*/
-                    0, /* zero point */
+        // Call this for both shifted and non-shifted 8-bit prepare A
+        int8PrepareA(child(0)->val()->data(), // input
+                    *child(1)->val()->data(), // Scale
+                    0, // zero point
                     rows(child(0)->val()),
                     cols(child(0)->val()),
-                    val_->data<int8_t>() /*output*/);
+                    val_->data<Integer>() /*output*/);
       }
     #endif
     )};

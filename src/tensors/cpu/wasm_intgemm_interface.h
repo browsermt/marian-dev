@@ -146,7 +146,7 @@ void int8PrepareBFromQuantizedTransposed(const int8_t* input_B_quant_transposed,
  *                             Size of the array = `rows_A` * `width`.
  */
 extern "C" void
-__attribute__((import_module("wasm_gemm"))) __attribute__((import_name("int8_prepare_a")))
+__attribute__((import_module("wasm_gemm"), import_name("int8_prepare_a")))
 int8PrepareA(const float* input_A,
                   float scale,
                   float zero_point,
