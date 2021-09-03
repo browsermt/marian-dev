@@ -215,13 +215,12 @@ public:
                                 rows(val),
                                 cols(val));
           #else
-          ABORT("INT8::PREPARE_A not supported by WASM GEMM");
-          /*int8PrepareA(tmp->data(), //input
-                      quantMult, //Quant Mult
+          int8PrepareA(tmp->data(), //input
+                      quantMult, //scale
                       0, // zero point
                       rows(val),
                       cols(val),
-                      paramMat->data<int8_t>() /*output*/);*/
+                      paramMat->data<int8_t>() /*output*/);
           #endif
           //Put the quantMult at the back of the tensor
           *(reinterpret_cast<float *>(paramMat->data<int8_t>() + val->shape().elements())) = quantMult;

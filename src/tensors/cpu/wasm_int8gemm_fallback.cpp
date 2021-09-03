@@ -2,16 +2,18 @@
 
 #include "wasm_intgemm_interface.h"
 #include "3rd_party/intgemm/intgemm/intgemm.h"
+#include "common/logging.h"
 
-void __attribute__((export_name("int8_prepare_a_fallback")))
-int8PrepareAFallback(const float* input_A,
+extern "C"
+void int8PrepareAFallback(const float* input_A,
                   float scale,
                   float zero_point,
                   Index rows_A,
                   Index width,
                   int8_t* output)
 {
-  intgemm::Int8Shift::PrepareA(input_A, output, scale, rows_A, width);
+  LOG(info, "Calling fallback implementation of int8PrepareA");
+  ABORT("Unimplemented fallback for int8PrepareA");
 }
 
 /*
