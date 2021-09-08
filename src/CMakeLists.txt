@@ -58,7 +58,7 @@ set(MARIAN_SOURCES
   tensors/cpu/tensor_operators.cpp
   
   tensors/cpu/integer_common.cpp
-  tensors/cpu/wasm_int8gemm_fallback.cpp
+  tensors/cpu/wasm_intgemm_fallback.cpp
 
   graph/expression_graph.cpp
   graph/expression_operators.cpp
