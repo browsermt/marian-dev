@@ -1,3 +1,10 @@
+/** A fallback (non-optimized) implementation of "wasm_gemm_interface.h" interface for integer matrix
+ * multiplication for wasm target.
+ *
+ * This implementation is built and exported from the main module and can serve as a polyfill (fallback)
+ * for browsers that don't support an optimized implementation of "wasm_gemm_interface.h".
+ */
+
 #if defined(WASM)
 
 #include "wasm_intgemm_interface.h"
@@ -12,8 +19,8 @@ void int8PrepareAFallback(const float* input_A,
                   Index width,
                   int8_t* output)
 {
-  LOG(info, "Calling fallback implementation of int8PrepareA");
-  ABORT("Unimplemented fallback for int8PrepareA");
+  LOG(info, "Calling fallback implementation of interface \"int8PrepareA\"");
+  ABORT("Unimplemented fallback for interface \"int8PrepareA\"");
 }
 
 /*
