@@ -128,10 +128,11 @@ void int8PrepareBFromQuantizedTransposed(const int8_t* input_B_quant_transposed,
  * Prepare A for the Matrix Multiply function from Input matrix A.
  *
  * It performs quantization on floating values of input.
- * The final prepared A might be architecture dependent. e.g. On some architectures like x86, it might
- * be unsigned (achieved by adding 127 to quantized values) while on others like Arm, it might be
- * signed.
- * The final prepared A can be used as an input to matrix multiply function (`int8MultiplyAndAddBias`).
+ * The final prepared A might be architecture dependent. e.g. On some architectures like x86, it
+ * might be unsigned (achieved by adding 127 to quantized values) while on others like Arm, it might
+ * be signed.
+ * The final prepared A can be used as an input to matrix multiply function
+ * (`int8MultiplyAndAddBias`).
  *
  * Please note that this interface might have architecture specific implementation.
  *
@@ -145,14 +146,13 @@ void int8PrepareBFromQuantizedTransposed(const int8_t* input_B_quant_transposed,
  * @param[out]  output         An array representing the prepared A matrix.
  *                             Size of the array = `rows_A` * `width`.
  */
-extern "C" void
-__attribute__((import_module("wasm_gemm"), import_name("int8_prepare_a")))
+extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_prepare_a")))
 int8PrepareA(const float* input_A,
-                  float scale,
-                  float zero_point,
-                  Index rows_A,
-                  Index width,
-                  int8_t* output);
+             float scale,
+             float zero_point,
+             Index rows_A,
+             Index width,
+             int8_t* output);
 
 /**
  * Prepares bias for the Matrix Multiply function.
