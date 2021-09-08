@@ -30,10 +30,10 @@ bool shifted_;
 
   NodeOps forwardOps() override {
 #ifdef COMPILE_CPU
+  typedef typename intgemm_<vtype>::type Integer;
+  #if !defined(WASM)
     return {NodeOp(
       quantMult_ = *child(1)->val()->data();
-      typedef typename intgemm_<vtype>::type Integer;
-    #if !defined(WASM)
       if (!shifted_) {
         intgemm_<vtype>::width::PrepareA(child(0)->val()->data(), /*input*/
                                       val_->data<Integer>(), /*output*/
@@ -47,7 +47,9 @@ bool shifted_;
                                       rows(child(0)->val()),
                                       cols(child(0)->val()));
       }
-    #else
+    )};
+  #else
+    return {NodeOp(
       if (intgemm_<vtype>::intgemmType == Type::intgemm16) {
         ABORT_IF(shifted_, "Shifted 16-bit PrepareA is not supported");
         intgemm_<vtype>::width::PrepareA(child(0)->val()->data(), /*input*/
@@ -64,8 +66,8 @@ bool shifted_;
                     cols(child(0)->val()),
                     val_->data<int8_t>() /*output*/);
       }
-    #endif
     )};
+  #endif
 #else
     return {NodeOp()};
 #endif
