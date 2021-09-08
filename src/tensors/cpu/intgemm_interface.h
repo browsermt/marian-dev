@@ -62,7 +62,7 @@ bool shifted_;
                     0, // zero point
                     rows(child(0)->val()),
                     cols(child(0)->val()),
-                    val_->data<Integer>() /*output*/);
+                    val_->data<int8_t>() /*output*/);
       }
     #endif
     )};

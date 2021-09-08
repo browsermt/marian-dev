@@ -28,6 +28,6 @@ sed -i.bak 's/return WebAssembly.instantiate(binary, info);/return WebAssembly.i
 sed -i.bak 's/var module = new WebAssembly.Module(bytes);/var module = new WebAssembly.Module(bytes, {simdWormhole:true});/g' marian-decoder.js
 echo "SUCCESS"
 
-echo "Import integer (8-bit) gemm from within the main module"
+echo "Polyfill the fallback integer (8-bit) gemm implementation from the main module"
 sed -i.bak 's/asmLibraryArg,/asmLibraryArg,"wasm_gemm":{"int8_prepare_a": (...a) => Module["asm"].int8PrepareAFallback(...a) },/g' marian-decoder.js
 echo "SUCCESS"
