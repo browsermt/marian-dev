@@ -273,7 +273,7 @@ else(MSVC)
     list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
 
     # use our customizations to the generated emscripted html and js resources
-    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "-s EXPORTED_FUNCTIONS=[_main,_int8PrepareAFallback] \
+    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "-s EXPORTED_FUNCTIONS=[_main,_int8PrepareAFallback,_int8PrepareBFallback,_int8PrepareBFromTransposedFallback,_int8PrepareBFromQuantizedTransposedFallback,_int8PrepareBiasFallback,_int8MultiplyAndAddBiasFallback,_int8SelectColumnsOfBFallback] \
                                               --pre-js ${CMAKE_SOURCE_DIR}/wasm/pre-module.js \
                                               --post-js ${CMAKE_SOURCE_DIR}/wasm/post-module.js \
                                               --shell-file ${CMAKE_SOURCE_DIR}/wasm/custom_shell.html")
