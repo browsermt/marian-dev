@@ -32,6 +32,7 @@ bool shifted_;
 #ifdef COMPILE_CPU
   #if defined(WASM)
     return {NodeOp(
+      quantMult_ = *child(1)->val()->data();
       ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
         "Int16::PrepareA is not implemented for wasm.");
       ABORT_IF(!shifted_, "Int8::PrepareA is not implemented for wasm.");
@@ -168,7 +169,7 @@ public:
       auto input = child(0)->val();
       ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
                 "Int16::SelectColumnsB is not implemented for wasm.");
-      Index num_cols = (*indices_.end()) - (*indices_.begin());
+      Index num_cols = std::distance(indices_.begin(), indices_.end());
       int8SelectColumnsOfB(reinterpret_cast<int8_t *>(input->data()),
                     rows(input),
                     cols(input),
@@ -515,10 +516,10 @@ public:
           ABORT_IF(!shifted_, "Int8::Multiply is not implemented for wasm.");
 
           int8MultiplyAndAddBias(reinterpret_cast<int8_t *>(child(0)->val()->data()), /*A*/
-                                aQuantMult, /*Scale of A*/
+                                unquant_mult, /*Scale of A*/
                                 0, /*zero point of A*/
                                 reinterpret_cast<int8_t *>(child(1)->val()->data()), /*B*/
-                                bQuantMult/scalar_, /*Scale of B*/
+                                1, /*Scale of B*/
                                 0, /*zero point of B*/
                                 child(2)->val()->data(), /*child(2) is bias*/
                                 rows(child(0)->val()),
