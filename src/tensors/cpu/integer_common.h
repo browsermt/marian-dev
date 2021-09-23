@@ -50,7 +50,7 @@ void prepareAndTransposeB(io::Item& item, const char * input) {
     if (reinterpret_cast<uintptr_t>(input) % 64 == 0 && reinterpret_cast<uintptr_t>(output_tensor) % 64 == 0) {
     #if defined(WASM)
         ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
-                "Int16::PrepareBQuantizedTransposed is not implemented for wasm. Called from {}", __FILE__);
+                "Int16::PrepareBQuantizedTransposed is not implemented for wasm.");
         int8PrepareBFromQuantizedTransposed(reinterpret_cast<const int8_t *>(input),
                                         (Index)rows(item.shape),  //Since we only transposed, but didn't update the shape when constructing the binary 
                                         (Index)cols(item.shape), //rows here returns the columns of the transposed input matrix, and cols -> the rows
@@ -67,7 +67,7 @@ void prepareAndTransposeB(io::Item& item, const char * input) {
         Integer * aligned_output = reinterpret_cast<Integer *>(genericMalloc(512, rows(item.shape)*cols(item.shape)*sizeof(Integer)));
     #if defined(WASM)
         ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
-                "Int16::PrepareBQuantizedTransposed is not implemented for wasm. Called from {}", __FILE__);
+                "Int16::PrepareBQuantizedTransposed is not implemented for wasm.");
         int8PrepareBFromQuantizedTransposed(reinterpret_cast<const int8_t *>(aligned_input),
                                         (Index)rows(item.shape),  //Since we only transposed, but didn't update the shape when constructing the binary, 
                                         (Index)cols(item.shape), //rows here returns the columns of the transposed input matrix, and cols -> the rows
