@@ -68,11 +68,11 @@ using Index = uint32_t;
  */
 extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_prepare_b")))
 int8PrepareB(const float* input_B,
-                  float scale,
-                  float zero_point,
-                  Index width,
-                  Index cols_B,
-                  int8_t* output);
+             float scale,
+             float zero_point,
+             Index width,
+             Index cols_B,
+             int8_t* output);
 
 /**
  * Prepare B for the Matrix Multiply function from transposed version of Input matrix B.
@@ -94,13 +94,14 @@ int8PrepareB(const float* input_B,
  * @param[out]  output                 An array representing the prepared B matrix.
  *                                     Size of the array = `width` * `cols_B`.
  */
-extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_prepare_b_from_transposed")))
-int8PrepareBFromTransposed(const float* input_B_transposed,
-                                float scale,
-                                float zero_point,
-                                Index width,
-                                Index cols_B,
-                                int8_t* output);
+extern "C" void
+    __attribute__((import_module("wasm_gemm"), import_name("int8_prepare_b_from_transposed")))
+    int8PrepareBFromTransposed(const float* input_B_transposed,
+                               float scale,
+                               float zero_point,
+                               Index width,
+                               Index cols_B,
+                               int8_t* output);
 
 /**
  * Prepare B for the Matrix Multiply function from a quantized and transposed version of Input
@@ -121,11 +122,12 @@ int8PrepareBFromTransposed(const float* input_B_transposed,
  * @param[out]  output                     An array representing the prepared B matrix.
  *                                         Size of the array = `width` * `cols_B`.
  */
-extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_prepare_b_from_quantized_transposed")))
+extern "C" void __attribute__((import_module("wasm_gemm"),
+                               import_name("int8_prepare_b_from_quantized_transposed")))
 int8PrepareBFromQuantizedTransposed(const int8_t* input_B_quant_transposed,
-                                         Index width,
-                                         Index cols_B,
-                                         int8_t* output);
+                                    Index width,
+                                    Index cols_B,
+                                    int8_t* output);
 
 /**
  * Prepare A for the Matrix Multiply function from Input matrix A.
@@ -179,12 +181,12 @@ int8PrepareA(const float* input_A,
  */
 extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_prepare_bias")))
 int8PrepareBias(const int8_t* input_B_prepared,
-                     float scale,
-                     float zero_point,
-                     Index width,
-                     Index cols_B,
-                     const float* input_bias,
-                     float* output);
+                float scale,
+                float zero_point,
+                Index width,
+                Index cols_B,
+                const float* input_bias,
+                float* output);
 
 /**
  * Perform multiplication of 2 matrices followed by adding a bias.
@@ -217,18 +219,19 @@ int8PrepareBias(const int8_t* input_B_prepared,
  * @param[out]  output                 An array representing the result matrix in row-major format.
  *                                     Size of the array = `rows_A` * `cols_B`.
  */
-extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_multiply_and_add_bias")))
-int8MultiplyAndAddBias(const int8_t* input_A_prepared,
-                            float scale_A,
-                            float zero_point_A,
-                            const int8_t* input_B_prepared,
-                            float scale_B,
-                            float zero_point_B,
-                            const float* input_bias_prepared,
-                            Index rows_A,
-                            Index width,
-                            Index cols_B,
-                            float* output);
+extern "C" void
+    __attribute__((import_module("wasm_gemm"), import_name("int8_multiply_and_add_bias")))
+    int8MultiplyAndAddBias(const int8_t* input_A_prepared,
+                           float scale_A,
+                           float zero_point_A,
+                           const int8_t* input_B_prepared,
+                           float scale_B,
+                           float zero_point_B,
+                           const float* input_bias_prepared,
+                           Index rows_A,
+                           Index width,
+                           Index cols_B,
+                           float* output);
 
 /**
  * Select a subset of columns of prepared B.
@@ -249,8 +252,8 @@ int8MultiplyAndAddBias(const int8_t* input_A_prepared,
  */
 extern "C" void __attribute__((import_module("wasm_gemm"), import_name("int8_select_columns_of_b")))
 int8SelectColumnsOfB(const int8_t* input_B_prepared,
-                          Index width,
-                          Index cols_B,
-                          const Index* cols,
-                          const Index num_cols,
-                          int8_t* output);
+                     Index width,
+                     Index cols_B,
+                     const Index* cols,
+                     const Index num_cols,
+                     int8_t* output);
