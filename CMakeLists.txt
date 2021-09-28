@@ -266,14 +266,15 @@ else(MSVC)
       set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
     endif(USE_THREADS)
     set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
-    set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=0 -s DISABLE_EXCEPTION_CATCHING=1 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -s DECLARE_ASM_MODULE_EXPORTS=0 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
+    set(CMAKE_CXX_FLAGS_RELEASE         "-O3 -s WASM=1 -s ASSERTIONS=0 -s DISABLE_EXCEPTION_CATCHING=1 -s LLD_REPORT_UNDEFINED -s FORCE_FILESYSTEM=1 -s ALLOW_MEMORY_GROWTH=1 -g2 ${DISABLE_PTHREAD_MEMGROWTH_WARNING} -funroll-loops")
     # Disabling Pthreads + memory growth warning to be an error
     # Pthreads + memory growth causes JS accessing the wasm memory to be slow
     # https://github.com/WebAssembly/design/issues/1271
     list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
 
     # use our customizations to the generated emscripted html and js resources
-    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "-s EXPORTED_FUNCTIONS=[_main,_int8PrepareAFallback,_int8PrepareBFallback,_int8PrepareBFromTransposedFallback,_int8PrepareBFromQuantizedTransposedFallback,_int8PrepareBiasFallback,_int8MultiplyAndAddBiasFallback,_int8SelectColumnsOfBFallback] \
+    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s DECLARE_ASM_MODULE_EXPORTS=0 \
+                                              -s EXPORTED_FUNCTIONS=[_main,_int8PrepareAFallback,_int8PrepareBFallback,_int8PrepareBFromTransposedFallback,_int8PrepareBFromQuantizedTransposedFallback,_int8PrepareBiasFallback,_int8MultiplyAndAddBiasFallback,_int8SelectColumnsOfBFallback] \
                                               --pre-js ${CMAKE_SOURCE_DIR}/wasm/pre-module.js \
                                               --post-js ${CMAKE_SOURCE_DIR}/wasm/post-module.js \
                                               --shell-file ${CMAKE_SOURCE_DIR}/wasm/custom_shell.html")
