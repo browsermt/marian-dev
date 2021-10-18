@@ -92,7 +92,7 @@ float quantMult_;
 
   NodeOps forwardOps() override {
 #ifdef COMPILE_CPU
-#if defined(WASM)
+/*#if defined(WASM)
    return {NodeOp(
       quantMult_ = *child(1)->val()->data();
       if (isIntgemm(child(0)->value_type())) {
@@ -105,24 +105,34 @@ float quantMult_;
                     0, //Zero point
                     rows(child(0)->val()), // width
                     cols(child(0)->val()), // cols_B
-                    val_->data<int8_t>() /*output*/);
+                    val_->data<int8_t>() //output);
       }
     )};
-#else
-   return {NodeOp(
+#else */
+   return { [=]() {
       quantMult_ = *child(1)->val()->data();
-      typedef typename intgemm_<vtype>::type Integer;
       if (isIntgemm(child(0)->value_type())) {
         val_ = child(0)->val();
       } else {
+#if defined(WASM)
+        ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
+                "Int16::PrepareB is not implemented for wasm.");
+        int8PrepareB(child(0)->val()->data(), //input
+                    *child(1)->val()->data(), //Scale
+                    0, //Zero point
+                    rows(child(0)->val()), // width
+                    cols(child(0)->val()), // cols_B
+                    val_->data<int8_t>() /*output*/);
+#else
+        typedef typename intgemm_<vtype>::type Integer;
         intgemm_<vtype>::width::PrepareB(child(0)->val()->data(), /*input*/
                                       val_->data<Integer>(), /*output*/
                                       *child(1)->val()->data(), /*Quant Mult*/
                                       rows(child(0)->val()),
                                       cols(child(0)->val()));
-      }
-    )};
 #endif
+      }
+    }};
 #else
    return {NodeOp()};
 #endif
