@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Added capability to compile wasm compatible marian sources (i.e. the sources that compile on wasm successfully) natively.
 - Enable loading SentencePiece vocabs from protobuf
 - Added a target-agnostic matrix multiply interface for wasm builds
+- Use target-agnostic matrix multiply interface for wasm builds and allow importing an implementation of this interface from separate wasm modules.
 
 ### Fixed
 - Segfault of spm_train when compiled with -DUSE_STATIC_LIBS=ON seems to have gone away with update to newer SentencePiece version.

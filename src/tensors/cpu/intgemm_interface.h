@@ -35,7 +35,7 @@ bool shifted_;
       quantMult_ = *child(1)->val()->data();
       ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
         "Int16::PrepareA is not implemented for wasm.");
-      ABORT_IF(!shifted_, "Int8::PrepareA is not implemented for wasm.");
+      ABORT_IF(!shifted_, "Int8::PrepareA is not implemented for wasm. Please use shifted version.");
       int8PrepareA(child(0)->val()->data(), // input
                   *child(1)->val()->data(), // Scale
                   0, // zero point
