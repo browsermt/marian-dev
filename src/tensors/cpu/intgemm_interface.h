@@ -89,23 +89,6 @@ float quantMult_;
 
   NodeOps forwardOps() override {
 #ifdef COMPILE_CPU
-/*#if defined(WASM)
-   return {NodeOp(
-      quantMult_ = *child(1)->val()->data();
-      if (isIntgemm(child(0)->value_type())) {
-        val_ = child(0)->val();
-      } else {
-        ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
-                "Int16::PrepareB is not implemented for wasm.");
-        int8PrepareB(child(0)->val()->data(), //input
-                    *child(1)->val()->data(), //Scale
-                    0, //Zero point
-                    rows(child(0)->val()), // width
-                    cols(child(0)->val()), // cols_B
-                    val_->data<int8_t>() //output);
-      }
-    )};
-#else */
    return { [=]() {
       quantMult_ = *child(1)->val()->data();
       if (isIntgemm(child(0)->value_type())) {
@@ -163,28 +146,6 @@ public:
 
   NodeOps forwardOps() override {
 #ifdef COMPILE_CPU
-  /*#if defined(WASM)
-    return {NodeOp(
-      //We get the quantization multiplier from a PrepareB or directly from the input
-      if (child(0)->type() == "intgemmPrepareB") {
-        auto bPreppedNode = std::static_pointer_cast<PrepareBNodeOp<vtype> >(child(0));
-        quantMult_ = bPreppedNode->quantMult_;
-      } else {
-        typedef typename intgemm_<vtype>::type Integer;
-        quantMult_ = *(reinterpret_cast<float *>(reinterpret_cast<Integer *>(child(0)->val()->data()) + child(0)->val()->shape().elements()));
-      }
-      auto input = child(0)->val();
-      ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
-                "Int16::SelectColumnsB is not implemented for wasm.");
-      Index num_cols = std::distance(indices_.begin(), indices_.end());
-      int8SelectColumnsOfB(reinterpret_cast<int8_t *>(input->data()),
-                    rows(input),
-                    cols(input),
-                    &*indices_.begin(),
-                    num_cols,
-                    val_->data<int8_t>());
-    )};
-  #else */
     return { [=]() {
       //We get the quantization multiplier from a PrepareB or directly from the input
       if (child(0)->type() == "intgemmPrepareB") {
@@ -332,25 +293,6 @@ public:
     //std::cerr << "TrueBias: " << child(0)->name() << " type: " << child(0)->type() << " bQuantMult: " << this->child(3)->val()->data()[0] <<  " aQuantMult: " << this->child(2)->val()->data()[0] << std::endl;
     //std::cerr << "Bias name and val: " << child(0)->name() << " " << child(0)->val()->data()[0] << std::endl;
 #ifdef COMPILE_CPU
-  /*#if defined(WASM)
-    return {NodeOp(
-      if (alreadyPrepared_) {
-        //God Knows why trying to assign the bias tensor to this node causes a crash, the second time it's referenced
-        //even though it's supposed to work fine. We use a memory copy instead.
-        ABORT("We shouldn't ever be here.");
-        std::memcpy(val_->data(), child(0)->val()->data(), child(0)->shape()[-1]*sizeof(float));
-        //val_ = child(0)->val();
-      } else {
-        auto bias = this->child(0)->val();
-        auto b = this->child(1)->val();
-        auto quant_mult_a = this->child(2)->val();
-        auto quant_mult_b = this->child(3)->val();
-
-        float unquant_mult = (-1)*((127.0f / *quant_mult_a->data())*(127.0f / *quant_mult_b->data()))/(127.0f); //Minus one to invert add_ps later on
-        int8PrepareBias((const int8_t *)b->data(), unquant_mult, 0.0, rows(b), cols(b), bias->data(), val_->data());
-      }
-    )};
-  #else*/
     return { [=]() {
       if (alreadyPrepared_) {
         //God Knows why trying to assign the bias tensor to this node causes a crash, the second time it's referenced
@@ -365,11 +307,11 @@ public:
         auto quant_mult_b = this->child(3)->val();
 
         float unquant_mult = (-1)*((127.0f / *quant_mult_a->data())*(127.0f / *quant_mult_b->data()))/(127.0f); //Minus one to invert add_ps later on
-  #if defined(WASM)
+    #if defined(WASM)
         int8PrepareBias((const int8_t *)b->data(), unquant_mult, 0.0, rows(b), cols(b), bias->data(), val_->data());
-  #else
+    #else
         intgemm::Int8Shift::PrepareBias((const int8_t *)b->data(), rows(b), cols(b), intgemm::callbacks::UnquantizeAndAddBiasAndWrite(unquant_mult, bias->data(), val_->data()));
-  #endif
+    #endif
       }
     }};
 #else
@@ -394,16 +336,6 @@ public:
   NodeOps forwardOps() override {
     //std::cerr << "FakeBias: " << child(0)->name() << " bQuantMult: " << this->child(2)->val()->data()[0] << " aQuantMult: " << this->child(1)->val()->data()[0] << std::endl;
 #ifdef COMPILE_CPU
-  /*#if defined(WASM)
-    return {NodeOp(
-      auto b = this->child(0)->val();
-      auto quant_mult_a = this->child(1)->val();
-      auto quant_mult_b = this->child(2)->val();
-
-      float unquant_mult = (-1)*((127.0f / *quant_mult_a->data())*(127.0f / *quant_mult_b->data()))/(127.0f); //Minus one to invert add_ps later on
-      int8PrepareBias((const int8_t *)b->data(), unquant_mult, 0.0, rows(b), cols(b), nullptr, val_->data());
-    )};
-  #else */
     return { [=]() {
     auto b = this->child(0)->val();
     auto quant_mult_a = this->child(1)->val();
@@ -443,27 +375,6 @@ public:
 
   NodeOps forwardOps() override {
 #ifdef COMPILE_CPU
-  /*#if defined(WASM)
-    return {NodeOp(
-          float aQuantMult = std::static_pointer_cast<PrepareANodeOp<vtype> >(child(0))->quantMult_;
-          float bQuantMult;
-          if (child(1)->type() == "intgemmSelectColumnsB") {
-            bQuantMult = std::static_pointer_cast<SelectColumnsBNodeOp<vtype> >(child(1))->quantMult_;
-          } else if (child(1)->type() == "intgemmPrepareB") {
-            bQuantMult = std::static_pointer_cast<PrepareBNodeOp<vtype> >(child(1))->quantMult_;
-          } else {
-            typedef typename intgemm_<vtype>::type Integer;
-            bQuantMult = *(reinterpret_cast<float *>(reinterpret_cast<Integer *>(child(1)->val()->data()) + child(1)->val()->shape().elements()));
-          }
-          float unquant_mult = 1.0f/(aQuantMult*bQuantMult);
-
-          unquant_mult = unquant_mult*scalar_;
-          ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
-              "Int16::Multiply is not implemented for wasm.");
-          ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm8,
-              "Int8::Multiply is not implemented for wasm.");
-    )};
-  #else */
     return { [=]() {
           float aQuantMult = std::static_pointer_cast<PrepareANodeOp<vtype> >(child(0))->quantMult_;
           float bQuantMult;
@@ -526,38 +437,6 @@ public:
 
   NodeOps forwardOps() override {
 #ifdef COMPILE_CPU
-  /*#if defined(WASM)
-    return {NodeOp(
-          float aQuantMult = std::static_pointer_cast<PrepareANodeOp<vtype> >(child(0))->quantMult_;
-          float bQuantMult;
-          if (child(1)->type() == "intgemmSelectColumnsB") {
-            bQuantMult = std::static_pointer_cast<SelectColumnsBNodeOp<vtype> >(child(1))->quantMult_;
-          } else if (child(1)->type() == "intgemmPrepareB") {
-            bQuantMult = std::static_pointer_cast<PrepareBNodeOp<vtype> >(child(1))->quantMult_;
-          } else {
-            typedef typename intgemm_<vtype>::type Integer;
-            bQuantMult = *(reinterpret_cast<float *>(reinterpret_cast<Integer *>(child(1)->val()->data()) + child(1)->val()->shape().elements()));
-          }
-          float unquant_mult = 1.0f/(aQuantMult*bQuantMult);
-          unquant_mult = unquant_mult*scalar_;
-
-          ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
-            "Int16::Multiply is not implemented for wasm.");
-          ABORT_IF(!shifted_, "Int8::Multiply is not implemented for wasm.");
-
-          int8MultiplyAndAddBias(reinterpret_cast<int8_t *>(child(0)->val()->data()), //A
-                                unquant_mult, //Scale of A
-                                0, //zero point of A
-                                reinterpret_cast<int8_t *>(child(1)->val()->data()), //B
-                                1, //Scale of B
-                                0, //zero point of B
-                                child(2)->val()->data(), //child(2) is bias
-                                rows(child(0)->val()),
-                                cols(child(0)->val()),
-                                cols(child(1)->val()),
-                                val_->data());
-    )};
-  #else */
     return { [=]() {
           float aQuantMult = std::static_pointer_cast<PrepareANodeOp<vtype> >(child(0))->quantMult_;
           float bQuantMult;
