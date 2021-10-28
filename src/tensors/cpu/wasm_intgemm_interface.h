@@ -212,6 +212,8 @@ int8PrepareBias(const int8_t* input_B_prepared,
  * @param[in]   input_bias_prepared    An array representing the prepared bias.
  *                                     This must be obtained by using `int8PrepareBias` function.
  *                                     Size of the array = `cols_B`
+ * @param[in]   unquant_multiplier     A value that will be multiplied to the final unquantization
+ *                                     factor that is prepared from `scale_A` and `scale_B`.
  * @param[in]   rows_A                 No. of rows of Input matrix A. No restriction on its size.
  * @param[in]   width                  No. of columns of Input matrix A (same as no. of columns of
  *                                     Input matrix B). It should be a multiple of 64.
@@ -228,6 +230,7 @@ extern "C" void
                            float scale_B,
                            float zero_point_B,
                            const float* input_bias_prepared,
+                           float unquant_multiplier,
                            Index rows_A,
                            Index width,
                            Index cols_B,

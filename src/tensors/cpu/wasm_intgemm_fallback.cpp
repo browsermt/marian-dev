@@ -80,18 +80,20 @@ extern "C" void int8MultiplyAndAddBiasFallback(const int8_t* input_A_prepared,
                                                float scale_B,
                                                float zero_point_B,
                                                const float* input_bias_prepared,
+                                               float unquant_multiplier,
                                                Index rows_A,
                                                Index width,
                                                Index cols_B,
                                                float* output) {
   LOG(info, "Calling fallback implementation of \"int8MultiplyAndAddBias\"");
+  float unquant_factor = unquant_multiplier/(scale_A*scale_B);
   intgemm::Int8Shift::Multiply(
       input_A_prepared,
       input_B_prepared,
       rows_A,
       width,
       cols_B,
-      intgemm::callbacks::UnquantizeAndAddBiasAndWrite(scale_A, input_bias_prepared, output));
+      intgemm::callbacks::UnquantizeAndAddBiasAndWrite(unquant_factor, input_bias_prepared, output));
 }
 
 extern "C" void int8SelectColumnsOfBFallback(const int8_t* input_B_prepared,

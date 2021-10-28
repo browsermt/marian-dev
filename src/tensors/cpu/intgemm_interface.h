@@ -457,12 +457,13 @@ public:
           ABORT_IF(!shifted_, "Int8::Multiply is not implemented for wasm.");
 
           int8MultiplyAndAddBias(reinterpret_cast<int8_t *>(child(0)->val()->data()), /*A*/
-                                unquant_mult, /*Scale of A*/
+                                aQuantMult, /*Scale of A*/
                                 0, /*zero point of A*/
                                 reinterpret_cast<int8_t *>(child(1)->val()->data()), /*B*/
-                                1, /*Scale of B*/
+                                bQuantMult, /*Scale of B*/
                                 0, /*zero point of B*/
                                 child(2)->val()->data(), /*child(2) is bias*/
+                                scalar_,
                                 rows(child(0)->val()),
                                 cols(child(0)->val()),
                                 cols(child(1)->val()),
