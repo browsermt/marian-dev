@@ -59,18 +59,22 @@ extern "C" void int8PrepareBFromQuantizedTransposedFallback(const int8_t* input_
 }
 
 extern "C" void int8PrepareBiasFallback(const int8_t* input_B_prepared,
-                                        float scale,
-                                        float zero_point,
+                                        float scale_A,
+                                        float zero_point_A,
+                                        float scale_B,
+                                        float zero_point_B,
+                                        float unquant_multiplier,
                                         Index width,
                                         Index cols_B,
                                         const float* input_bias,
                                         float* output) {
   LOG(info, "Calling fallback implementation of \"int8PrepareBias\"");
+  float unquant_factor = (-1) * ((127.0f / scale_A) * (127.0f / scale_B)) / (127.0f);
   intgemm::Int8Shift::PrepareBias(
       input_B_prepared,
       width,
       cols_B,
-      intgemm::callbacks::UnquantizeAndAddBiasAndWrite(scale, input_bias, output));
+      intgemm::callbacks::UnquantizeAndAddBiasAndWrite(unquant_factor, input_bias, output));
 }
 
 extern "C" void int8MultiplyAndAddBiasFallback(const int8_t* input_A_prepared,
@@ -86,14 +90,14 @@ extern "C" void int8MultiplyAndAddBiasFallback(const int8_t* input_A_prepared,
                                                Index cols_B,
                                                float* output) {
   LOG(info, "Calling fallback implementation of \"int8MultiplyAndAddBias\"");
-  float unquant_factor = unquant_multiplier/(scale_A*scale_B);
-  intgemm::Int8Shift::Multiply(
-      input_A_prepared,
-      input_B_prepared,
-      rows_A,
-      width,
-      cols_B,
-      intgemm::callbacks::UnquantizeAndAddBiasAndWrite(unquant_factor, input_bias_prepared, output));
+  float unquant_factor = unquant_multiplier / (scale_A * scale_B);
+  intgemm::Int8Shift::Multiply(input_A_prepared,
+                               input_B_prepared,
+                               rows_A,
+                               width,
+                               cols_B,
+                               intgemm::callbacks::UnquantizeAndAddBiasAndWrite(
+                                   unquant_factor, input_bias_prepared, output));
 }
 
 extern "C" void int8SelectColumnsOfBFallback(const int8_t* input_B_prepared,
