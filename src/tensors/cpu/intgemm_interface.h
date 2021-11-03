@@ -309,10 +309,7 @@ public:
     #if defined(WASM)
         float scale_a = *quant_mult_a->data();
         float scale_b = *quant_mult_b->data();
-        float zero_point_a = 0.0;
-        float zero_point_b = 0.0;
-        float unquant_multiplier = 1.0;
-        int8PrepareBias((const int8_t *)b->data(), scale_a, zero_point_a, scale_b, zero_point_b, unquant_multiplier, rows(b), cols(b), bias->data(), val_->data());
+        int8PrepareBias((const int8_t *)b->data(), scale_a, 0.0 /*zero_point_a*/, scale_b, 0.0 /*zero_point_b*/, rows(b), cols(b), bias->data(), val_->data());
     #else
         float unquant_mult = (-1)*((127.0f / *quant_mult_a->data())*(127.0f / *quant_mult_b->data()))/(127.0f); //Minus one to invert add_ps later on
         intgemm::Int8Shift::PrepareBias((const int8_t *)b->data(), rows(b), cols(b), intgemm::callbacks::UnquantizeAndAddBiasAndWrite(unquant_mult, bias->data(), val_->data()));
@@ -349,10 +346,7 @@ public:
   #if defined(WASM)
     float scale_a = *quant_mult_a->data();
     float scale_b = *quant_mult_b->data();
-    float zero_point_a = 0.0;
-    float zero_point_b = 0.0;
-    float unquant_multiplier = 1.0;
-    int8PrepareBias((const int8_t *)b->data(), scale_a, zero_point_a, scale_b, zero_point_b, unquant_multiplier, rows(b), cols(b), nullptr/*input_bias*/, val_->data());
+    int8PrepareBias((const int8_t *)b->data(), scale_a, 0.0 /*zero_point_a*/, scale_b, 0.0 /*zero_point_b*/, rows(b), cols(b), nullptr/*input_bias*/, val_->data());
   #else
     float unquant_mult = (-1)*((127.0f / *quant_mult_a->data())*(127.0f / *quant_mult_b->data()))/(127.0f); //Minus one to invert add_ps later on
     intgemm::Int8Shift::PrepareBias((const int8_t *)b->data(), rows(b), cols(b), intgemm::callbacks::UnquantizeAndWrite(unquant_mult, val_->data()));
