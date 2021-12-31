@@ -5,6 +5,9 @@
 #include "tensors/cpu/aligned.h"
 #include "common/io_item.h"
 #include "3rd_party/intgemm/intgemm/intgemm.h"
+#if defined(WASM)
+#include "wasm_intgemm_interface.h"
+#endif
 
 #include <emmintrin.h>
 #include <immintrin.h>
@@ -45,18 +48,36 @@ void prepareAndTransposeB(io::Item& item, const char * input) {
     // Sometimes we will end up with misaligned intput (and output) so we can't use them directly.
     // If this is the case, we will need to temporary allocate aligned memory, copy the results, and then free it
     if (reinterpret_cast<uintptr_t>(input) % 64 == 0 && reinterpret_cast<uintptr_t>(output_tensor) % 64 == 0) {
+    #if defined(WASM)
+        ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
+                "Int16::PrepareBQuantizedTransposed is not implemented for wasm.");
+        int8PrepareBFromQuantizedTransposed(reinterpret_cast<const int8_t *>(input),
+                                        (Index)rows(item.shape),  //Since we only transposed, but didn't update the shape when constructing the binary 
+                                        (Index)cols(item.shape), //rows here returns the columns of the transposed input matrix, and cols -> the rows
+                                        (int8_t *)output_tensor);
+    #else
         intgemm_<vtype>::width::PrepareBQuantizedTransposed(reinterpret_cast<const Integer *>(input),
                                                    output_tensor,
                                                    rows(item.shape),  //Since we only transposed, but didn't update the shape when constructing the binary, 
                                                    cols(item.shape)); //rows here returns the columns of the transposed input matrix, and cols -> the rows
+    #endif
     } else {
         Integer * aligned_input = reinterpret_cast<Integer *>(genericMalloc(512, rows(item.shape)*cols(item.shape)*sizeof(Integer)));
         std::copy(input, input + rows(item.shape)*cols(item.shape), aligned_input);
         Integer * aligned_output = reinterpret_cast<Integer *>(genericMalloc(512, rows(item.shape)*cols(item.shape)*sizeof(Integer)));
+    #if defined(WASM)
+        ABORT_IF(intgemm_<vtype>::intgemmType == Type::intgemm16,
+                "Int16::PrepareBQuantizedTransposed is not implemented for wasm.");
+        int8PrepareBFromQuantizedTransposed(reinterpret_cast<const int8_t *>(aligned_input),
+                                        (Index)rows(item.shape),  //Since we only transposed, but didn't update the shape when constructing the binary, 
+                                        (Index)cols(item.shape), //rows here returns the columns of the transposed input matrix, and cols -> the rows
+                                        reinterpret_cast<int8_t *>(aligned_output));
+    #else
         intgemm_<vtype>::width::PrepareBQuantizedTransposed(reinterpret_cast<const Integer *>(aligned_input),
                                                    reinterpret_cast<Integer *>(aligned_output),
                                                    rows(item.shape),  //Since we only transposed, but didn't update the shape when constructing the binary, 
                                                    cols(item.shape)); //rows here returns the columns of the transposed input matrix, and cols -> the rows
+    #endif
         // Copy to output tensor
         std::copy(aligned_output, aligned_output + rows(item.shape)*cols(item.shape), output_tensor);
         genericFree(aligned_input);

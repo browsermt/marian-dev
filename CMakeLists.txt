@@ -71,6 +71,28 @@ if(NOT COMPILE_WASM)
   # Setting BUILD_ARCH to native invokes CPU intrinsic detection logic below.
   # Prevent invoking that logic for WASM builds.
   set(BUILD_ARCH native CACHE STRING "Compile for this CPU architecture.")
+
+  # Unfortunately MSVC supports a limited subset of BUILD_ARCH flags. Instead try to guess
+  # what architecture we can compile to reading BUILD_ARCH and mapping it to MSVC values
+  # references: https://clang.llvm.org/docs/UsersManual.html https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/i386-and-x86-64-Options.html
+  # https://docs.microsoft.com/en-us/cpp/build/reference/arch-x86?redirectedfrom=MSDN&amp;amp;view=vs-2019&view=msvc-170 https://devblogs.microsoft.com/oldnewthing/20201026-00/?p=104397
+  # This is by no means an exhaustive list but should match the most common flags Linux programmers expect to parse to MSVC
+  if(MSVC)
+    if(BUILD_ARCH STREQUAL "native") # avx2 is good default for native. Very few desktop systems support avx512
+      set(MSVC_BUILD_ARCH "/arch:AVX2")
+    elseif(BUILD_ARCH STREQUAL "skylake-avx512" OR BUILD_ARCH STREQUAL "cannonlake" OR BUILD_ARCH STREQUAL "x86-64-v4" OR BUILD_ARCH STREQUAL "tigerlake" OR BUILD_ARCH STREQUAL "cooperlake" OR BUILD_ARCH STREQUAL "cascadelake")
+      set(MSVC_BUILD_ARCH "/arch:AVX512")
+    elseif(BUILD_ARCH STREQUAL "core-avx2" OR BUILD_ARCH STREQUAL "haswell" OR BUILD_ARCH STREQUAL "x86-64-v3" OR BUILD_ARCH STREQUAL "broadwell" OR BUILD_ARCH STREQUAL "skylake")
+      set(MSVC_BUILD_ARCH "/arch:AVX2")
+    elseif(BUILD_ARCH STREQUAL "sandybridge" OR BUILD_ARCH STREQUAL "corei7-avx" OR BUILD_ARCH STREQUAL "core-avx-i" OR BUILD_ARCH STREQUAL "ivybridge")
+      set(MSVC_BUILD_ARCH "/arch:AVX")
+    elseif(BUILD_ARCH STREQUAL "nehalem" OR BUILD_ARCH STREQUAL "westmere" OR BUILD_ARCH STREQUAL "x86-64-v2" OR BUILD_ARCH STREQUAL "corei7" OR BUILD_ARCH STREQUAL "core2")
+      set(MSVC_BUILD_ARCH "/arch:SSE2") # This is MSVC default. We won't go down to SSE because we don't support that hardware at all with intgemm. Marian recommends to only go down to SSE4.1 at most
+    else()
+      message(WARNING "Unknown BUILD_ARCH ${BUILD_ARCH} provided. Default to SSE2 for Windows build")
+      set(MSVC_BUILD_ARCH "/arch:SSE2")
+    endif()
+  endif(MSVC)
 endif()
 
 if(USE_THREADS)
@@ -146,7 +168,7 @@ if(MSVC)
   add_definitions(-DUSE_SSE2=1)
 
   # Or maybe use these?
-  set(INTRINSICS "/arch:AVX2")
+  set(INTRINSICS ${MSVC_BUILD_ARCH})
   # set(INTRINSICS "/arch:AVX512")
 
   set(CMAKE_CXX_FLAGS                  "/EHsc /DWIN32 /D_WINDOWS /DUNICODE /D_UNICODE /D_CRT_NONSTDC_NO_WARNINGS /D_CRT_SECURE_NO_WARNINGS ${DISABLE_GLOBALLY}")
@@ -273,7 +295,9 @@ else(MSVC)
     list(APPEND ALL_WARNINGS ${DISABLE_PTHREAD_MEMGROWTH_WARNING})
 
     # use our customizations to the generated emscripted html and js resources
-    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "--pre-js ${CMAKE_SOURCE_DIR}/wasm/pre-module.js \
+    set(MARIAN_DECODER_EMSCRIPTEN_LINK_FLAGS "-s ERROR_ON_UNDEFINED_SYMBOLS=0 -s DECLARE_ASM_MODULE_EXPORTS=0 \
+                                              -s EXPORTED_FUNCTIONS=[_main,_int8PrepareAFallback,_int8PrepareBFallback,_int8PrepareBFromTransposedFallback,_int8PrepareBFromQuantizedTransposedFallback,_int8PrepareBiasFallback,_int8MultiplyAndAddBiasFallback,_int8SelectColumnsOfBFallback] \
+                                              --pre-js ${CMAKE_SOURCE_DIR}/wasm/pre-module.js \
                                               --post-js ${CMAKE_SOURCE_DIR}/wasm/post-module.js \
                                               --shell-file ${CMAKE_SOURCE_DIR}/wasm/custom_shell.html")
   else(COMPILE_WASM)

@@ -65,9 +65,10 @@ bool setLoggingLevel(spdlog::logger& logger, std::string const level) {
 }
 
 static void setErrorHandlers();
-void createLoggers(const marian::Config* config) {
+std::vector<Logger> createLoggers(const marian::Config* config) {
   std::vector<std::string> generalLogs;
   std::vector<std::string> validLogs;
+  std::vector<Logger> loggers;
 
   if(config && !config->get<std::string>("log").empty()) {
     generalLogs.push_back(config->get<std::string>("log"));
@@ -84,12 +85,14 @@ void createLoggers(const marian::Config* config) {
 
   bool quiet = config && config->get<bool>("quiet");
   Logger general{createStderrLogger("general", "[%Y-%m-%d %T] %v", generalLogs, quiet)};
+  loggers.push_back(general);
   Logger valid{createStderrLogger("valid", "[%Y-%m-%d %T] [valid] %v", validLogs, quiet)};
+  loggers.push_back(valid);
 
   if(config && config->has("log-level")) {
     std::string loglevel = config->get<std::string>("log-level");
     if(!setLoggingLevel(*general, loglevel))
-      return;
+      return loggers;
     setLoggingLevel(*valid, loglevel);
   }
 
@@ -103,6 +106,7 @@ void createLoggers(const marian::Config* config) {
   }
 
   setErrorHandlers();
+  return loggers;
 }
 
 static void unhandledException() {
