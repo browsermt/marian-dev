@@ -27,6 +27,30 @@ const T* get(const void*& current, uint64_t num = 1) {
   return ptr;
 }
 
+// Copies the data from `ptr` into the item's `bytes` vector. If the item needs
+// to be dequantised or transposed, it will do that instead.
+void readItemData(const char* ptr, io::Item &item) {
+  if (matchType<intgemm8>(item.type)) {
+    if (item.name.find("Wemb") != std::string::npos) { // Since Wemb need to be dequantised, we have a special case for them
+      item.type = Type::float32;
+      item.bytes.resize(item.shape.elements()*sizeof(float)); // We should have an extra float at the back but that requires a different format, due to allocator work
+      cpu::integer::unquantizeWemb<Type::int8>(item, ptr);
+    } else {
+      cpu::integer::prepareAndTransposeB<Type::int8>(item, ptr);
+    }
+  } else if (matchType<intgemm16>(item.type)) {
+    if (item.name.find("Wemb") != std::string::npos) { // Since Wemb need to be dequantised, we have a special case for them
+      item.type = Type::float32;
+      item.bytes.resize(item.shape.elements()*sizeof(float)); // We should have an extra float at the back but that requires a different format, due to allocator work
+      cpu::integer::unquantizeWemb<Type::int16>(item, ptr);
+    } else {
+      cpu::integer::prepareAndTransposeB<Type::int16>(item, ptr);
+    }
+  } else {
+    std::copy(ptr, ptr + item.bytes.size(), item.bytes.begin());
+  }
+}
+
 void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   uint64_t binaryFileVersion = *get<uint64_t>(current);
   ABORT_IF(binaryFileVersion != BINARY_FILE_VERSION,
@@ -58,6 +82,7 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   get<char>(current, offset);
 
   for(int i = 0; i < numHeaders; ++i) {
+    std::cerr << "Decoding " << items[i].name << std::endl;
     //if(items[i].mapped && !isIntgemm(items[i].type)) { // memory-mapped, hence only set pointer. At the moment it intgemm matrices can't be used without processing
     //  items[i].ptr = get<char>(current, headers[i].dataLength);
     //} else { // reading into item data
@@ -68,25 +93,7 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
     uint64_t len = headers[i].dataLength;
     items[i].bytes.resize(len);
     const char* ptr = get<char>(current, len);
-    if (matchType<intgemm8>(items[i].type)) {
-      if (items[i].name.find("Wemb") != std::string::npos) { // Since Wemb need to be dequantised, we have a special case for them
-        items[i].type = Type::float32;
-        items[i].bytes.resize(items[i].shape.elements()*sizeof(float)); // We should have an extra float at the back but that requires a different format, due to allocator work
-        cpu::integer::unquantizeWemb<Type::int8>(items[i], ptr);
-      } else {
-        cpu::integer::prepareAndTransposeB<Type::int8>(items[i], ptr);
-      }
-    } else if (matchType<intgemm16>(items[i].type)) {
-      if (items[i].name.find("Wemb") != std::string::npos) { // Since Wemb need to be dequantised, we have a special case for them
-        items[i].type = Type::float32;
-        items[i].bytes.resize(items[i].shape.elements()*sizeof(float)); // We should have an extra float at the back but that requires a different format, due to allocator work
-        cpu::integer::unquantizeWemb<Type::int16>(items[i], ptr);
-      } else {
-        cpu::integer::prepareAndTransposeB<Type::int16>(items[i], ptr);
-      }
-    } else {
-      std::copy(ptr, ptr + len, items[i].bytes.begin());
-    }
+    readItemData(ptr, items[i]);
   }
 }
 
@@ -110,15 +117,64 @@ void loadItems(const std::string& fileName, std::vector<io::Item>& items) {
   loadItems(buf.data(), items, false);
 }
 
-io::Item getItem(const void* current, const std::string& varName) {
-  std::vector<io::Item> items;
-  loadItems(current, items);
+// Special case of loadItems() that only reads the item with a specific name.
+// If no item with that name is found, it will return an empty item.
+io::Item getItem(const void *current, std::string const &vName) {
+  uint64_t binaryFileVersion = *get<uint64_t>(current);
+  ABORT_IF(binaryFileVersion != BINARY_FILE_VERSION,
+           "Binary file versions do not match: {} (file) != {} (expected)",
+           binaryFileVersion,
+           BINARY_FILE_VERSION);
 
-  for(auto& item : items)
-    if(item.name == varName)
-      return item;
+  uint64_t numHeaders = *get<uint64_t>(current); // number of item headers that follow
+  const Header* headers = get<Header>(current, numHeaders); // read that many headers
 
-  return io::Item();
+  io::Item item;
+  int found = -1;
+
+  // Completely disable MMAP support for any models. We do not use it in bergamot and we hijack this codepath for binary model loading.
+  // If this is not set, we trigger node_initializers.cpp:186. This one just assigns the memory ptr to the tensor if set to true, but at the moment
+  // We are preparing some things on demand (the bottom portion of this code). Once we stop doing that, we can use the full mmap codepath
+  // Also when using the full mmap codepath, we need to uncomment expression_graph.h:582
+  item.mapped = false;
+
+  for(int i = 0; i < numHeaders; ++i) {
+    const char *name = get<char>(current, headers[i].nameLength);
+
+    if (name == vName) {
+      found = i;
+      item.type = static_cast<Type>(headers[i].type);
+      item.name = name;
+      // Don't stop reading we need to read all to get to the correct position
+    }
+  }
+
+  // read in actual shape and data
+  for(int i = 0; i < numHeaders; ++i) {
+    uint64_t len = headers[i].shapeLength;
+    const int* arr = get<int>(current, len); // read shape
+    
+    if (i == found) {
+      item.shape.resize(len); 
+      std::copy(arr, arr + len, item.shape.begin()); // copy to Item::shape
+      // Again, keep reading to get *current to the correct offset
+    }
+  }
+
+  // move by offset bytes, aligned to 256-bytes boundary
+  uint64_t offset = *get<uint64_t>(current);
+  get<char>(current, offset);
+
+  for(int i = 0; i < numHeaders; ++i) {
+    uint64_t len = headers[i].dataLength;
+    const char* ptr = get<char>(current, len);
+    if (i == found) {
+      item.bytes.resize(len);
+      readItemData(ptr, item);
+    }
+  }
+
+  return item;
 }
 
 io::Item getItem(const std::string& fileName, const std::string& varName) {
