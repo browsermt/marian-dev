@@ -82,7 +82,6 @@ void loadItems(const void* current, std::vector<io::Item>& items, bool mapped) {
   get<char>(current, offset);
 
   for(int i = 0; i < numHeaders; ++i) {
-    std::cerr << "Decoding " << items[i].name << std::endl;
     //if(items[i].mapped && !isIntgemm(items[i].type)) { // memory-mapped, hence only set pointer. At the moment it intgemm matrices can't be used without processing
     //  items[i].ptr = get<char>(current, headers[i].dataLength);
     //} else { // reading into item data
