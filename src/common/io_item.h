@@ -17,7 +17,7 @@ struct Item {
   Shape shape;
   Type type{Type::float32};
 
-  bool valid{true};
+  bool valid{true}; // TODO debug remove
 
   Item() = default;
 
@@ -25,28 +25,14 @@ struct Item {
 
   Item &operator=(Item &&) = default;
 
-  Item(const Item &other)
-  : bytes(other.bytes)
-  , ptr(other.ptr)
-  , mapped(other.mapped)
-  , name(other.name)
-  , shape(other.shape)
-  , type(other.type)
-  , valid(other.valid) {
-    std::cerr << "Copy constructor io::Item(name=" << name << ")" << std::endl;
-    std::cerr << marian::getCallStack(/*skipLevels=*/0) << '\n' << std::endl;
-  }
-
   ~Item() {
-    valid = false;
+    valid = false; // TODO debug remove
   }
 
-  Item &operator=(const Item &other) {
-    // std::cerr << "Copy assignment: ";
-    Item copy(other);
-    *this = std::move(copy);
-    return *this;
-  }
+  // Copy constructor is marked private to only allow copies to be made very
+  // explicitly through clone() for the moment.
+
+  Item &operator=(const Item &other) = delete;
 
   const char* data() const {
     if(mapped)
@@ -120,6 +106,14 @@ struct Item {
 
     type = toType;
   }
+
+  Item &&clone() const {
+    Item copy(*this);
+    return std::move(copy);
+  }
+
+private:
+  Item(const Item &other) = default;
 };
 
 }  // namespace io
