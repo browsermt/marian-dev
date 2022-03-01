@@ -185,8 +185,10 @@ Ptr<NodeInitializer> fromWord2vec(const std::string& file,
 
 Ptr<NodeInitializer> fromItem(const io::Item& item) {
   if(item.mapped) {
-    return fromLambda([item](Tensor tensor) {
+    return fromLambda([&item](Tensor tensor) {
       // @TODO: implement other types, for now croak loudly.
+      ABORT_UNLESS(item.valid, "io::Item deallocated before node was initialised");
+      
       ABORT_IF(tensor->getBackend()->getDeviceId().type != DeviceType::cpu,
                "Memory mapping only works for CPU tensors");
       ABORT_IF(tensor->type() != item.type,
@@ -201,9 +203,10 @@ Ptr<NodeInitializer> fromItem(const io::Item& item) {
       tensor->reset(mp);
     });
   } else {
-    return fromLambda(
-      [item](Tensor tensor) { tensor->set(item); },
-      item.type);
+    return fromLambda([&item](Tensor tensor) {
+        ABORT_UNLESS(item.valid, "io::Item deallocated before node was initialised");
+        tensor->set(item);
+      }, item.type);
   }
 }
 

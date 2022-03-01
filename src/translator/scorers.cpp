@@ -5,7 +5,7 @@ namespace marian {
 
 Ptr<Scorer> scorerByType(const std::string& fname,
                          float weight,
-                         std::vector<io::Item> items,
+                         std::vector<io::Item> const &items,
                          Ptr<Options> options) {
   options->set("inference", true);
   std::string type = options->get<std::string>("type");
@@ -47,7 +47,7 @@ Ptr<Scorer> scorerByType(const std::string& fname,
   return New<ScorerWrapper>(encdec, fname, weight, ptr);
 }
 
-std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<std::vector<io::Item>> models) {
+std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<std::vector<io::Item>> &models) {
   std::vector<Ptr<Scorer>> scorers;
 
   std::vector<float> weights(models.size(), 1.f);
@@ -56,7 +56,7 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<s
 
   bool isPrevRightLeft = false;  // if the previous model was a right-to-left model
   size_t i = 0;
-  for(auto items : models) {
+  for(auto &&items : models) {
     std::string fname = "F" + std::to_string(i);
 
     // load options specific for the scorer
