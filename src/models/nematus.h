@@ -28,20 +28,21 @@ public:
   void load(Ptr<ExpressionGraph> graph,
             const std::vector<io::Item>& items,
             bool /*markReloaded*/ = true) override {
-    auto ioItems = items;
+    std::vector<io::Item> ioItems;
+    ioItems.reserve(items.size());
     // map names and remove a dummy matrix 'decoder_c_tt' from items to avoid creating isolated node
-    for(auto it = ioItems.begin(); it != ioItems.end();) {
-      if(it->name == "decoder_c_tt") {
-        it = ioItems.erase(it);
-      } else if(it->name == "uidx") {
-        it = ioItems.erase(it);
-      } else if(it->name == "history_errs") {
-        it = ioItems.erase(it);
+    for(auto &&item : items) {
+      if(item.name == "decoder_c_tt") {
+        continue;
+      } else if(item.name == "uidx") {
+        continue;
+      } else if(item.name == "history_errs") {
+        continue;
       } else {
-        auto pair = nameMap_.find(it->name);
-        if(pair != nameMap_.end())
-          it->name = pair->second;
-        it++;
+        auto copy = item.clone();
+        auto pair = nameMap_.find(item.name);
+        copy.name = pair != nameMap_.end() ? pair->second : item.name;
+        ioItems.emplace_back(std::move(copy));
       }
     }
     // load items into the graph

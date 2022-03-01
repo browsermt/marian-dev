@@ -56,7 +56,7 @@ void Adagrad::load(const std::string& name,
   std::vector<float> vGt;
 
   auto items = io::loadItems(name);
-  for(auto item : items) {
+  for(auto &&item : items) {
     // get the size of gt_
     auto totalSize = item.shape.elements();
 
@@ -111,7 +111,9 @@ void Adagrad::save(const std::string& name,
   item.bytes.resize(vGt.size() * sizeOf(item.type));
   std::copy((char*)vGt.data(), (char*)(vGt.data() + vGt.size()), item.bytes.begin());
 
-  io::saveItems(name, {item});
+  std::vector<io::Item> items;
+  items.push_back(std::move(item));
+  io::saveItems(name, items);
 }
 
 void Adagrad::resetStats() {
@@ -192,7 +194,7 @@ void Adam::load(const std::string& name,
   std::array<double, 2> vDenoms;
 
   auto items = io::loadItems(name);
-  for(auto item : items) {
+  for(auto &&item : items) {
     // get the size of mt_ and vt_, they are the same
     auto totalSize = item.shape.elements();
 
@@ -299,7 +301,12 @@ void Adam::save(const std::string& name,
   std::copy(
       (char*)vDenoms.data(), (char*)(vDenoms.data() + vDenoms.size()), itemDenoms.bytes.begin());
 
-  io::saveItems(name, {itemMt, itemVt, itemDenoms});
+  std::vector<io::Item> items;
+  items.reserve(3);
+  items.emplace_back(std::move(itemMt));
+  items.emplace_back(std::move(itemVt));
+  items.emplace_back(std::move(itemDenoms));
+  io::saveItems(name, items);
 }
 
 void Adam::resetStats() {

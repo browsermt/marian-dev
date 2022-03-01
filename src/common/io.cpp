@@ -71,7 +71,8 @@ void getYamlFromModel(YAML::Node& yaml,
 void addMetaToItems(const std::string& meta,
                     const std::string& varName,
                     std::vector<io::Item>& items) {
-  Item item;
+  items.emplace_back();
+  Item &item = items.back();
   item.name = varName;
 
   // increase size by 1 to add \0
@@ -83,8 +84,6 @@ void addMetaToItems(const std::string& meta,
   item.bytes.back() = '\0';
 
   item.type = Type::int8;
-
-  items.push_back(item);
 }
 
 void loadItemsFromNpz(const std::string& fileName, std::vector<Item>& items) {
