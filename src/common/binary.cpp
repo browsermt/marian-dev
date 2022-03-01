@@ -110,26 +110,26 @@ void loadItems(const std::string& fileName, std::vector<io::Item>& items) {
   loadItems(buf.data(), items, false);
 }
 
-io::Item getItem(const void* current, const std::string& varName) {
+io::Item &&getItem(const void* current, const std::string& varName) {
   std::vector<io::Item> items;
   loadItems(current, items);
 
   for(auto& item : items)
     if(item.name == varName)
-      return item;
+      return std::move(item);
 
-  return io::Item();
+  return std::move(io::Item());
 }
 
-io::Item getItem(const std::string& fileName, const std::string& varName) {
+io::Item &&getItem(const std::string& fileName, const std::string& varName) {
   std::vector<io::Item> items;
   loadItems(fileName, items);
 
   for(auto& item : items)
     if(item.name == varName)
-      return item;
+      return std::move(item);
 
-  return io::Item();
+  return std::move(io::Item());
 }
 
 void saveItems(const std::string& fileName,

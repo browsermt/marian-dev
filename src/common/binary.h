@@ -17,8 +17,8 @@ void loadItems(const void* current,
                bool mapped = false);
 void loadItems(const std::string& fileName, std::vector<io::Item>& items);
 
-io::Item getItem(const void* current, const std::string& vName);
-io::Item getItem(const std::string& fileName, const std::string& vName);
+io::Item &&getItem(const void* current, const std::string& vName);
+io::Item &&getItem(const std::string& fileName, const std::string& vName);
 
 void saveItems(const std::string& fileName, const std::vector<io::Item>& items);
 
