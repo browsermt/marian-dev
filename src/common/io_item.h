@@ -17,6 +17,37 @@ struct Item {
   Shape shape;
   Type type{Type::float32};
 
+  bool valid{true};
+
+  Item() = default;
+
+  Item(Item &&) = default;
+
+  Item &operator=(Item &&) = default;
+
+  Item(const Item &other)
+  : bytes(other.bytes)
+  , ptr(other.ptr)
+  , mapped(other.mapped)
+  , name(other.name)
+  , shape(other.shape)
+  , type(other.type)
+  , valid(other.valid) {
+    std::cerr << "Copy constructor io::Item(name=" << name << ")" << std::endl;
+    std::cerr << marian::getCallStack(/*skipLevels=*/0) << '\n' << std::endl;
+  }
+
+  ~Item() {
+    valid = false;
+  }
+
+  Item &operator=(const Item &other) {
+    // std::cerr << "Copy assignment: ";
+    Item copy(other);
+    *this = std::move(copy);
+    return *this;
+  }
+
   const char* data() const {
     if(mapped)
       return ptr;
