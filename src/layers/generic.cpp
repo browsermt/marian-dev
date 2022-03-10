@@ -300,9 +300,9 @@ namespace marian {
           if (isIntgemm(Wt_->value_type())) {
             if (graph_->getBackend()->isPrecomputedAlpha()) {
               aQuantMult = Expression<marian::cpu::integer::fetchAlphaFromModelNodeOp>(Wt_);
-              if (hasBias_) {
+              if (hasBias_ && graph_->getBackend()->isShifted()) {
                 preparedBias = Expression<marian::cpu::integer::PrepareBiasForBNodeOp>(b_, Wt_, aQuantMult, bQuantMult);
-              } else {
+              } else if (graph_->getBackend()->isShiftedAll()) {
                 preparedBias = Expression<marian::cpu::integer::PrepareFakeBiasForBNodeOp>(Wt_, aQuantMult, bQuantMult);
               }
             }
@@ -311,9 +311,9 @@ namespace marian {
             cachedShortWt_ = marian::cpu::integer::prepareB<Type::int8>(Wt_, marian::cpu::integer::quantMult<Type::int8>(Wt_), -1000.0 /*clip_value currently unused */, transposed /*Use different routine as Wt is transposed*/);
             if (graph_->getBackend()->isPrecomputedAlpha()) {
               aQuantMult = Expression<marian::cpu::integer::fetchAlphaFromModelNodeOp>(cachedShortWt_);
-              if (hasBias_) {
+              if (hasBias_ && graph_->getBackend()->isShifted()) {
                 preparedBias = Expression<marian::cpu::integer::PrepareBiasForBNodeOp>(b_, cachedShortWt_, aQuantMult, bQuantMult);
-              } else {
+              } else if (graph_->getBackend()->isShiftedAll()) {
                 preparedBias = Expression<marian::cpu::integer::PrepareFakeBiasForBNodeOp>(cachedShortWt_, aQuantMult, bQuantMult);
               }
             }

@@ -932,6 +932,8 @@ void ConfigParser::addSuboptionsIntgemm(cli::CLIWrapper& cli) {
       "Deprecated. Corresponds to --gemm-precision int16");
   cli.add<bool>("--int8",
       "Optimize speed even more aggressively sacrificing memory or precision by using 8bit integer GEMM with intgemm instead of floats. Only available on CPU. Corresponds to --gemm-precision int8");
+  cli.add<bool>("--int8Alpha",
+      "Use a precomputed quantisation multipliers for the activations. Requires a special model. Corresponds to --gemm-precision int8Alpha");
   cli.add<bool>("--int8shift",
       "Use a faster, shifted integer 8bit GEMM implementation. Corresponds to --gemm-precision int8shift");
   cli.add<bool>("--int8shiftAlpha",
@@ -941,7 +943,7 @@ void ConfigParser::addSuboptionsIntgemm(cli::CLIWrapper& cli) {
   cli.add<bool>("--int8shiftAlphaAll",
       "Use a faster, shifted integer 8bit GEMM implementation even for matrices that don't have a bias, with precomputed alphas. Should be the fastest option. Corresponds to --gemm-precision int8shiftAlphaAll");
   cli.add<std::string>("--gemm-precision",
-      "Use lower precision for the GEMM operations only. Supported values: float32, int16, int8, int8shift, int8shiftAlpha, int8shiftAll, int8shiftAlphaAll", "float32");
+      "Use lower precision for the GEMM operations only. Supported values: float32, int16, int8, int8Alpha, int8shift, int8shiftAlpha, int8shiftAll, int8shiftAlphaAll", "float32");
   cli.add<bool>("--dump-quantmult",
       "Dump the quantization multipliers of activation matrices during an avarage run. To be used to precompute alphas for ---gemm-precision int8shiftAlpha or int8shiftAlphaAll.");
   // clang-format on

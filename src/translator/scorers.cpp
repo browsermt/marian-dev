@@ -112,13 +112,14 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<c
 
   size_t i = 0;
   for(auto ptr : ptrs) {
+    auto items = io::loadItems(ptr);
     std::string fname = "F" + std::to_string(i);
 
     // load options specific for the scorer
     auto modelOptions = New<Options>(options->clone());
     if(!options->get<bool>("ignore-model-config")) {
       YAML::Node modelYaml;
-      io::getYamlFromModel(modelYaml, "special:model.yml", ptr);
+      io::getYamlFromModel(modelYaml, "special:model.yml", items);
       if(!modelYaml.IsNull()) {
         LOG(info, "Loaded model config");
         modelOptions->merge(modelYaml, true);
@@ -128,7 +129,7 @@ std::vector<Ptr<Scorer>> createScorers(Ptr<Options> options, const std::vector<c
       }
     }
 
-    scorers.push_back(scorerByType(fname, weights[i], ptr, modelOptions));
+    scorers.push_back(scorerByType(fname, weights[i], items, modelOptions));
     i++;
   }
 

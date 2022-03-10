@@ -601,7 +601,7 @@ template<Type vtype>
 static inline Expr affine(Expr a, Expr b, Expr bias, bool transA, bool transB, float scale, float /* clipValue currently unused */ = 0.0f, bool shiftedBias=false) {
   Type bElementType = b->value_type();
   Expr aQuantMult = nullptr;
-  static bool precomputedAlphas = b->graph()->getBackend()->isPrecomputedAlpha();
+  bool precomputedAlphas = b->graph()->getBackend()->isPrecomputedAlpha();
   if (precomputedAlphas) { //Shifting here maybe should check?
     aQuantMult = Expression<fetchAlphaFromModelNodeOp>(b);
   } else {

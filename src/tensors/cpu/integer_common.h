@@ -96,7 +96,10 @@ void unquantizeWemb(io::Item& item, const char * input) {
     typedef typename intgemm_<vtype>::type Integer;
     float quantMult = *(reinterpret_cast<const float *>(reinterpret_cast<const Integer *>(input) + item.shape.elements()));
     float * output_tensor = reinterpret_cast<float *>(&(*item.bytes.begin()));
-    for (size_t i = 0; i < rows(item.shape) * cols(item.shape); i++) {
+    // Explicitly calculate n once beforehand because the compiler does not pick up on its
+    // static nature, and will end up calling marian::Shape::dim() a lot.
+    const size_t n = rows(item.shape) * cols(item.shape);
+    for (size_t i = 0; i < n; i++) {
         output_tensor[i] = reinterpret_cast<const Integer *>(input)[i]*(1/quantMult);
     }
 }
