@@ -39,7 +39,7 @@ public:
       : name_(name), actualAllocator_(New<TensorAllocator>(backend, device)) {}
 
   ~OwningAllocator(){
-      // This can be  called form separate (client) threads with no control.
+      // This can be  called from separate (client) threads with no control.
       // The static-allocator is not thread-safe and we should not try
       // concurrent attempts.
       
@@ -61,7 +61,7 @@ public:
   }
 
   static void debugTensor(const Tensor &t){
-    // std::cout << "(Type = " <<  t->type() << ", " << t->shape() << ")";
+     std::cout << "(Type = " <<  t->type() << ", " << t->shape() << ")";
   }
 
   void clear() { actualAllocator_->clear(); }
@@ -69,9 +69,9 @@ public:
   void free(const Tensor& t) { 
       // Free the tensor.
       actualAllocator_->free(t); 
-      // std::cout << "Removing from " << name_ << "a tensor with params: ";
-      // debugTensor(t);
-      // std::cout << "\n";
+      std::cout << "Removing from " << name_ << "a tensor with params: ";
+      debugTensor(t);
+      std::cout << "\n";
       
       // Mark that the tensor is deallocated to avoid double free in the destructor.
       allocations_.erase(t); 
@@ -430,8 +430,6 @@ public:
     dot << graphviz();
     dot.close();
   }
-
-  void pprintTensors() const;
 
 private:
 

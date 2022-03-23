@@ -73,65 +73,7 @@ void createSubtape(Expr node) {
   node->setSubtape(subtape);
 }
 
-void ExpressionGraph::pprintTensors() const {
-  // The string has to be constructed recursively. So let's work with a stack
-  // here to accomodate things.
-  struct TraceEntry {
-      size_t depth;
-      Expr expr;
-      Expr parent;
-  };
-
-  std::stack<TraceEntry> trace;
-  std::unordered_map<Expr, bool> visited;
-  std::vector<TraceEntry> visitOrder;
-
-  std::string sexpr;
-
-  // The following does not work. 
-  std::cout << "TopNodes: " << topNodes_.size() << "\n";
-  for(auto root: topNodes_){
-      // trace.push({/*.depth = */0, /*.expr = */root});
-  }
-
-
-  // Let's try forwardTape
-  // assert(!nodesForward_.empty());
-  for(auto p = nodesForward_.rbegin(); p != nodesForward_.rend(); ++p){
-      auto &e = *p;
-      if (!visited[e]){
-          visited[e] = true;
-          trace.push({/*.depth =*/0,/*.expr = */e, /*.parent = */nullptr});
-          // Assuming directional edges, we don't need a visited flag(?)
-          while (!trace.empty()){
-              TraceEntry entry = trace.top();
-              trace.pop();
-              const size_t spacesLimit = entry.depth;
-              for(size_t spaces = 0; spaces < spacesLimit; spaces++){
-                  std::cout << " ";
-              }
-              std::cout << (entry.expr)->name() << "\n";
-              visitOrder.push_back(entry);
-
-
-              auto children = (entry.expr)->children();
-              for(auto q = children.rbegin(); q!= children.rend(); ++q){
-                  auto &child = *q;
-                  if (!visited[child]){
-                      visited[child] = true;
-                      trace.push({/*.depth = */entry.depth + 1, /*.expr = */child, /*.parent = */entry.expr});
-                  }
-              }
-
-          }
-      }
-  }
-
-
-}
-
 void ExpressionGraph::forwardNext() {
-  // pprintTensors();
   // @TODO: check if allocation works properly
   tensors_->clearShorttermMemory();
 
