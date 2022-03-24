@@ -50,8 +50,8 @@ public:
   // We introduce this third constructor, where we can share a workspace
   // (static preallocated storage) from a worker which comes from elsewhere. 
   Tensors(Ptr<TensorAllocator> tensors, Ptr<TensorAllocator> cache)
-      : tensors_(New<TensorAllocator>(tensors)), 
-        cache_(New<TensorAllocator>(cache)), 
+      : tensors_(tensors), 
+        cache_(cache), 
         shortterm_(New<WeakMemory>()), 
         longterm_(New<Memory>()) {}
 
