@@ -1,12 +1,8 @@
 #include "graph/expression_graph.h"
 #include "tensors/tensor_operators.h"
-#include <stack>
-#include <unordered_map>
 #include <sstream>
-#include <vector>
 
 namespace marian {
-
 
 ExpressionGraph::ExpressionGraph(bool inference)
   : inferenceOnly_(inference),
