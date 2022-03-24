@@ -19,113 +19,10 @@ namespace marian {
 template <class T, typename... Args>
 Expr Expression(Args&&... args);
 
-// This is experimental code, expect horrible approaches. The question being
-// addressed is can this method share static-workspaces?  This injection cleans
-// up after itself(?) 
-class OwningAllocator {
-public:
-  // Additional constructor. Share a workspace? Allocator is supplied externally.
-  // There can only be a finite number of "workspaces", which
-  // are often associated with a gpu-worker (upper bound number of GPUs?) and
-  // cpu-worker, upper bounded by number of workers. Something external can control this with a TensorAllocator.
-  OwningAllocator(const std::string &name, Ptr<TensorAllocator> allocator)
-      : name_(name), actualAllocator_(allocator) {}
-
-  // The following two constructors just wrap around the usual TensorAllocator.
-  OwningAllocator(const std::string &name, Ptr<Backend> backend)
-      : name_(name), actualAllocator_(New<TensorAllocator>(backend)) {}
-
-  OwningAllocator(const std::string &name, Ptr<Backend> backend, Ptr<Device> device)
-      : name_(name), actualAllocator_(New<TensorAllocator>(backend, device)) {}
-
-  ~OwningAllocator(){
-      // This can be  called from separate (client) threads with no control.
-      // The static-allocator is not thread-safe and we should not try
-      // concurrent attempts.
-      
-      /*
-      for(auto tensor: allocations_){
-          actualAllocator_->free(tensor);
-      }
-      */
-  }
-
-  OwningAllocator(const OwningAllocator&) = delete;
-  OwningAllocator& operator=(const OwningAllocator&) = delete;
-
-  void allocate(/*out*/ Tensor& t, Shape shape, Type type = Type::float32) {
-    actualAllocator_->allocate(t, shape, type);
-
-    // Mark that we allocated this tensor.
-    allocations_.insert(t);
-  }
-
-  static void debugTensor(const Tensor &t){
-     std::cout << "(Type = " <<  t->type() << ", " << t->shape() << ")";
-  }
-
-  void clear() { actualAllocator_->clear(); }
-  void reserve(size_t bytes){ actualAllocator_->reserve(bytes); }
-  void free(const Tensor& t) { 
-      // Free the tensor.
-      actualAllocator_->free(t); 
-      std::cout << "Removing from " << name_ << "a tensor with params: ";
-      debugTensor(t);
-      std::cout << "\n";
-      
-      // Mark that the tensor is deallocated to avoid double free in the destructor.
-      allocations_.erase(t); 
-
-      // The following should be 1 or maybe few more, from the call-site and ahead.
-      // std::cout << reinterpret_cast<size_t>(t.get()) << ": " <<  t.useCount() << "\n";
-
-  }
-
-  // Logs tensors that are still active. This is used to diagnose whether
-  // memory has been cleaned up after after a model / in between
-  // translations.
-  void logActive(){
-      /*
-      std::cout << name_ << "has the following tensors active: \n";
-      for(auto t: allocations_){
-          std::cout << reinterpret_cast<size_t>(t.get()) << ": " ;
-          debugTensor(t);
-          std::cout <<  " usage: " << t.useCount() << "\n";
-      }
-      */
-  }
-
-  void throwAtReallocation(bool throwAtRealloc){ actualAllocator_->throwAtReallocation(throwAtRealloc); }
-  Ptr<Allocator> allocator() { return actualAllocator_->allocator(); }
-  Ptr<TensorAllocator> getTensorAllocator() { return actualAllocator_; }
-
-private:
-  // Hashes a pointer to an object using the address the pointer points
-  // to. If two pointers point to the same address, / they hash to the same
-  // value.  This way we skip any hashing tricks marian already has in
-  // place. @jerinphilip has been unable to track the std::hash
-  // specialization or whatever down.
-  template <class T>
-  struct HashIPtr {
-    size_t operator()(const IPtr<T>& t) const {
-      size_t address = reinterpret_cast<size_t>(t.get());
-      return std::hash<size_t>()(address);
-    }
-  };
-
-  // @jerinphilip wants to know which ones are allocated/deallocated during the process. THIS IS NOT GOOD
-  const std::string name_; 
-  Ptr<TensorAllocator> actualAllocator_;
-  std::unordered_set<Tensor, HashIPtr<TensorBase>> allocations_; // Tensor = IPtr<TensorBase>
-        
-};
-
 class Tensors {
-using TensorAllocatorType = OwningAllocator;
-
 private:
-  Ptr<TensorAllocatorType> tensors_;
-  Ptr<TensorAllocatorType> cache_;
+  Ptr<TensorAllocator> tensors_;
+  Ptr<TensorAllocator> cache_;
 
   typedef std::unordered_map<size_t, std::vector<WExpr>> WeakMemory;
   typedef std::unordered_map<size_t, std::vector<Expr>> Memory;
@@ -137,15 +34,15 @@ private:
 
 public:
   Tensors(Ptr<Backend> backend)
-      : tensors_(New<TensorAllocatorType>("tensors_", backend)),
-        cache_(New<TensorAllocatorType>("cache_", backend)),
+      : tensors_(New<TensorAllocator>(backend)),
+        cache_(New<TensorAllocator>(backend)),
         shortterm_(New<WeakMemory>()),
         longterm_(New<Memory>())/*,
         midterm_(New<ShortlistMemory>())*/ {}
 
   Tensors(Ptr<Backend> backend, Ptr<Device> device)
-      : tensors_(New<TensorAllocatorType>("tensors_", backend, device)),
-        cache_(New<TensorAllocatorType>("cache_", backend)),
+      : tensors_(New<TensorAllocator>(backend, device)),
+        cache_(New<TensorAllocator>(backend)),
         shortterm_(New<WeakMemory>()),
         longterm_(New<Memory>())/*,
         midterm_(New<ShortlistMemory>())*/ {}
@@ -153,8 +50,8 @@ public:
   // We introduce this third constructor, where we can share a workspace
   // (static preallocated storage) from a worker which comes from elsewhere. 
   Tensors(Ptr<TensorAllocator> tensors, Ptr<TensorAllocator> cache)
-      : tensors_(New<TensorAllocatorType>("tensors_", tensors)), 
-        cache_(New<TensorAllocatorType>("cache_", cache)), 
+      : tensors_(New<TensorAllocator>(tensors)), 
+        cache_(New<TensorAllocator>(cache)), 
         shortterm_(New<WeakMemory>()), 
         longterm_(New<Memory>()) {}
 
@@ -162,11 +59,6 @@ public:
 
   void throwAtReallocation(bool throwAtRealloc) {
     tensors_->throwAtReallocation(throwAtRealloc);
-  }
-
-  void logActive(){
-      tensors_->logActive();
-      cache_->logActive();
   }
 
   void allocateForward(Expr node) {
@@ -186,7 +78,7 @@ public:
   void free(const Tensor& tensor) { tensors_->free(tensor); }
 
   Ptr<Allocator>       getAllocator() { return tensors_->allocator(); }
-  Ptr<TensorAllocator> getTensorAllocator() { return tensors_->getTensorAllocator(); }
+  Ptr<TensorAllocator> getTensorAllocator() { return tensors_; }
 
   Expr findOrRemember(Expr node) {
     Expr rememberingThingsHurt = nullptr;
@@ -377,10 +269,6 @@ public:
   void backprop() {
     forward();
     backward();
-  }
-
-  void logActive() {
-      tensors_->logActive();
   }
 
   bool fits() {
