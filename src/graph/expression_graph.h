@@ -78,9 +78,6 @@ public:
   Ptr<TensorAllocator> getTensorAllocator() { return tensors_; }
 
   Expr findOrRemember(Expr node) {
-    Expr rememberingThingsHurt = nullptr;
-    return rememberingThingsHurt;
-
     size_t hash = node->hash();
     // memoize constant nodes that are not parameters
     // parameters are already memoized in the graph itself
