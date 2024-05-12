@@ -332,6 +332,11 @@ else(MSVC)
     list(APPEND ALL_WARNINGS -Wsuggest-override -Wno-int-in-bool-context)
   endif()
 
+  # This warning does not exist prior to gcc 14.0
+  if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 14.0)
+    list(APPEND ALL_WARNINGS -Wno-template-id-cdtor;)
+  endif()
+
   if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     # these flags are not known to clang
     set(CMAKE_GCC_FLAGS "-Wl,--no-as-needed")
