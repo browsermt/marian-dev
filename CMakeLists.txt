@@ -364,7 +364,29 @@ else(MSVC)
                                               --post-js ${CMAKE_SOURCE_DIR}/wasm/post-module.js \
                                               --shell-file ${CMAKE_SOURCE_DIR}/wasm/custom_shell.html")
   else(COMPILE_WASM)
-    set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS} ${BUILD_WIDTH}")
+    if (BUILD_ARCH STREQUAL "native" AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      # clang does not support -march=native on all platforms
+      set(TEST_FILE_NAME "test_march.c")
+      set(TEST_FILES_DIR "${CMAKE_CURRENT_BINARY_DIR}/test_march_dir")
+      file(MAKE_DIRECTORY "${TEST_FILES_DIR}")
+      FILE(WRITE "${TEST_FILES_DIR}/${TEST_FILE_NAME}" "int main() { return 0; }")
+      EXECUTE_PROCESS(
+        WORKING_DIRECTORY "${TEST_FILES_DIR}"
+        COMMAND clang -march=native "${TEST_FILE_NAME}" -o test
+        RESULT_VARIABLE MARCH_RESULT
+        ERROR_QUIET
+      )
+      FILE(REMOVE_RECURSE "${TEST_FILES_DIR}")
+      if (MARCH_RESULT EQUAL 0)
+        set(BUILD_FOR "-march=native")
+      else()
+        set(BUILD_FOR "-mtune=native -mcpu=native")
+      endif()
+    else()
+      set(BUILD_FOR "-march=${BUILD_ARCH}")
+    endif()
+
+    set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${BUILD_FOR} ${INTRINSICS} ${BUILD_WIDTH}")
     set(CMAKE_CXX_FLAGS_RELEASE         "-O3 ${BUILD_WIDTH} -funroll-loops")
     set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
     set(CMAKE_CXX_FLAGS_SLIM            "-O3 ${BUILD_WIDTH} -funroll-loops -DNDEBUG")
@@ -374,7 +396,7 @@ else(MSVC)
     set(CMAKE_CXX_FLAGS_PROFUSE         "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fprofile-use -fprofile-correction")
 
     # these need to be set separately
-    set(CMAKE_C_FLAGS                 "-pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
+    set(CMAKE_C_FLAGS                 "-pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${BUILD_FOR} ${INTRINSICS}")
     set(CMAKE_C_FLAGS_RELEASE         "-O3 ${BUILD_WIDTH} -funroll-loops")
     set(CMAKE_C_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
     set(CMAKE_C_FLAGS_SLIM            "-O3 ${BUILD_WIDTH} -funroll-loops -DNDEBUG")
