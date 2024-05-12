@@ -97,7 +97,10 @@ if(USE_SIMD_UTILS)
   endif()
   if(MSVC)
     add_compile_options(/flax-vector-conversions)
-  else(MSVC)
+  elseif(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # clang has a different default behaviour than gcc or msvc for lax-vector-conversions 
+    # and does not need the flag - it causes actually harm for some type casts - 
+    # see https://github.com/DLTcollab/sse2neon/pull/614
     add_compile_options(-flax-vector-conversions)
   endif(MSVC)
 endif(USE_SIMD_UTILS)
