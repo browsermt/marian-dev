@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+- Set and respect `PTHREAD_FLAG` even for non-WASM builds 
 - Disable the undocumented `mmap()` codepath. It is now used for loading models from binary byte arrays.
 - Preload model to Item vector before creating scorers
 

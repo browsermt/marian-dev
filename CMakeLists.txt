@@ -151,6 +151,7 @@ endif()
 
 if(USE_THREADS)
   # Need to set compile definition as well
+  set(PTHREAD_FLAG "-pthread")
   add_compile_definitions(USE_PTHREADS)
 endif()
 
@@ -345,7 +346,6 @@ else(MSVC)
 
   if(COMPILE_WASM)
     if(USE_THREADS)
-      set(PTHREAD_FLAG "-pthread")
       set(DISABLE_PTHREAD_MEMGROWTH_WARNING -Wno-error=pthreads-mem-growth)
     endif(USE_THREADS)
     set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} ${INTRINSICS}")
@@ -364,7 +364,7 @@ else(MSVC)
                                               --post-js ${CMAKE_SOURCE_DIR}/wasm/post-module.js \
                                               --shell-file ${CMAKE_SOURCE_DIR}/wasm/custom_shell.html")
   else(COMPILE_WASM)
-    set(CMAKE_CXX_FLAGS                 "-std=c++11 -pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS} ${BUILD_WIDTH}")
+    set(CMAKE_CXX_FLAGS                 "-std=c++11 ${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS} ${BUILD_WIDTH}")
     set(CMAKE_CXX_FLAGS_RELEASE         "-O3 ${BUILD_WIDTH} -funroll-loops")
     set(CMAKE_CXX_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
     set(CMAKE_CXX_FLAGS_SLIM            "-O3 ${BUILD_WIDTH} -funroll-loops -DNDEBUG")
@@ -374,7 +374,7 @@ else(MSVC)
     set(CMAKE_CXX_FLAGS_PROFUSE         "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -fprofile-use -fprofile-correction")
 
     # these need to be set separately
-    set(CMAKE_C_FLAGS                 "-pthread ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
+    set(CMAKE_C_FLAGS                 "${PTHREAD_FLAG} ${CMAKE_GCC_FLAGS} -fPIC ${DISABLE_GLOBALLY} -march=${BUILD_ARCH} ${INTRINSICS}")
     set(CMAKE_C_FLAGS_RELEASE         "-O3 ${BUILD_WIDTH} -funroll-loops")
     set(CMAKE_C_FLAGS_DEBUG           "-O0 -g ${CMAKE_RDYNAMIC_FLAG}")
     set(CMAKE_C_FLAGS_SLIM            "-O3 ${BUILD_WIDTH} -funroll-loops -DNDEBUG")
