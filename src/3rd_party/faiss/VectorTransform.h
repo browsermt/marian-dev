@@ -21,6 +21,12 @@
 #if defined(__APPLE__) && !defined(__arm64__)
 #include <x86intrin.h>
 #endif
+#if defined(__x86_64__) || defined(_M_X64) || defined(__i386__)
+#include <xmmintrin.h>
+#include <emmintrin.h>
+#include <pmmintrin.h>
+#endif
+
 
 
 namespace faiss {
